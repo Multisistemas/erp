@@ -1,0 +1,65 @@
+# Dolibarr language file - fr_FR - ZenFusion OAuth
+CHARSET=UTF-8
+# Module
+Module105001Name=ZenFusion OAuth
+Module105001Desc=Authentification OAuth2 pour les APIs Google
+# Admin
+Config=Configuration
+Support=Assistance
+About=À propos
+# Config
+GoogleApiConfig=Configuration API Google
+ImportFrom=Importation depuis
+ManualConfiguration=Configuration manuelle
+JSONConfigFile=Fichier de configuration JSON
+ClientId=Client ID
+ClientSecret=Client Secret
+RedirectURL=URL de redirection
+JavascriptOrigin=Origine Javascript
+Instructions1=Pour permettre à Dolibarr de communiquer avec Google, vous devez l'enregistrer dans la « <a href="https://console.developers.google.com" target="_blank">Google Developers Console</a> ».<br>Identifiez-vous avec votre compte Google.<br>Créez un nouveau projet à l'aide de « Créer un project ».<br>Choisissez le « Nom du projet » (par ex. Dolibarr).<br>L'« Identifiant du projet » importe peu.<br>Cliquez sur « Créer ».<br>Utilisez « Activer une API » depuis le tableau de bord ou bien le menu « API & AUTHENTIFICATION », « API ».<br>Activez les APIs requises pour vos modules (« Status ACTIVÉ ») :
+Instructions2=Rendez-vous dans « API & AUTHENTIFICATION », « Identifiants ».<br>Cliquez sur « Create new Client ID » sous « OAuth ».<br>Utilisez les paramètres suivants :<ul><li>TYPE D'APPLICATION : Application Web</li><li>ORIGINES JAVASCRIPT AUTORISÉES : copiez/collez l'origine Javascript ci-dessous</li><li>URI DE REDIRECTION AUTORISÉE : copiez/collez l'URL de redirection ci-dessous</li></ul>
+Instructions3=Téléchargez le fichier à l'aide de « Télécharger JSON » <b>depuis le nouvel « Identifiant client de l'application web »</b> et envoyez-le en utilisant le formulaire ci-dessous.
+Instructions4=Félicitations, vous venez de permettre à Dolibarr de communiquer avec Google.<br>Maintenant, chaque utilisateur doit autoriser son compte Google à communiquer avec Dolibarr.<br>Dites-leurs de se rendre dans l'onglet Google de leur fiche utilisateur, de cliquer sur « Activer » et de suivre les instructions.
+## Messages
+Saved=Enregistré
+BadFile=Mauvais fichier
+UnexpectedError=Erreur inattendue
+# About
+Version=Version
+Publisher=Éditeur
+License=Licence
+Credits=Crédits
+Development=Développement
+ProjectManager=chef de projet
+SoftwareEngineer=ingénieur développement
+Libraries=Bibliothèques
+Contains=Contient :
+Ressources=Ressources
+# User card tab
+EnabledServices=Services activés
+AvailableServices=Services disponibles
+AccessToken=Accès aux services
+TokenOk=Activé
+TokenKo=Désactivé
+RequestToken=Activer
+DeleteToken=Désactiver
+Retry=Réessayer
+## Messages
+NoEmail=Veuillez renseigner votre adresse email Google dans votre fiche utilisateur
+InvalidConfiguration=Votre configuration est invalide<br>Veuillez contacter votre administrateur système
+OperationSuccessful=Opération réussie
+OperationFailed=L'opération a échoué
+# Box
+TokenStatus=État communication Google Apps
+NoUserFound=Aucun utilisateur inscrit
+ReadPermissionNotAllowed=Vous n'avez pas la permission de lire ces informations
+NoToken=Non connecté
+StatusOk=Activée
+StatusKo=Désactivée
+MissingCURL=php-curl n'est pas installé
+NoScope=Ce module ne peut pas fonctionner seul. Voir la liste des modules compatibles sur zenfusion.fr
+Permission7345701=Utiliser ZenFusion OAuth
+NotSameEmail=L'email authentifié ne correspond pas à l'email Dolibarr de cet utilisateur
+# ZeroClipboard
+CopyToClipboard=Copier dans le presse-papier
+CopiedToClipboard=Copié dans le presse-papier

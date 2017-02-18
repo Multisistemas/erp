@@ -1,0 +1,11 @@
+REFERENCE="CCF0001"
+			DATE="08 ago. 2011"
+			NB_ITEMS="1"
+			CLIENT="Compañia Eléctrica Cucumacayan, S.A. DE C.V. 77 Av. Norte, No. 210  San Salvador"
+			TOTAL_HT="58.85000000"
+			TOTAL_TTC="66.50000000"
+ITEM_0_QUANTITY="58.85"
+				ITEM_0_UNIT_PRICE="1.00000000"
+				ITEM_0_TVA="13.000"
+				ITEM_0_DESCRIPTION="Alojamiento web trimestral"
+				
