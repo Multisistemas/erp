@@ -167,12 +167,12 @@ if ($result > 0)
     // Prefix
     if (! empty($conf->global->SOCIETE_USEPREFIX))  // Old not used prefix field
     {
-        print '<tr><td>'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
+        print '<tr><td class="titlefield">'.$langs->trans('Prefix').'</td><td colspan="3">'.$object->prefix_comm.'</td></tr>';
     }
 
     if ($object->client)
     {
-        print '<tr><td>';
+        print '<tr><td class="titlefield">';
         print $langs->trans('CustomerCode').'</td><td colspan="3">';
         print $object->code_client;
         if ($object->check_codeclient() <> 0) print ' <font class="error">('.$langs->trans("WrongCustomerCode").')</font>';
@@ -181,14 +181,14 @@ if ($result > 0)
 
     if ($object->fournisseur)
     {
-        print '<tr><td>';
+        print '<tr><td class="titlefield">';
         print $langs->trans('SupplierCode').'</td><td colspan="3">';
         print $object->code_fournisseur;
         if ($object->check_codefournisseur() <> 0) print ' <font class="error">('.$langs->trans("WrongSupplierCode").')</font>';
         print '</td></tr>';
     }
 
-    print '<tr><td>'.$langs->trans("NbOfActiveNotifications").'</td>';
+    print '<tr><td class="titlefield">'.$langs->trans("NbOfActiveNotifications").'</td>';
     print '<td colspan="3">';
     $notify=new Notify($db);
     $tmparray = $notify->getNotificationsArray('', $object->id);
@@ -196,16 +196,20 @@ if ($result > 0)
     print '</td></tr>';
     print '</table>';
 
-    // Help
-    print '<br>'.$langs->trans("NotificationsDesc");
-
     print '</div>';
     
     dol_fiche_end();
 
     print "\n";
 
-    print '<br>';
+    // Help
+    print '<br>'.$langs->trans("NotificationsDesc");
+    print '<br>'.$langs->trans("NotificationsDescUser");
+    print '<br>'.$langs->trans("NotificationsDescContact");
+    print '<br>'.$langs->trans("NotificationsDescGlobal");
+    
+    print '<br><br><br>'."\n";
+    
     
     // Add notification form
     print load_fiche_titre($langs->trans("AddNewNotification"),'','');
@@ -399,7 +403,9 @@ if ($result > 0)
     }
 
     print '</table>';
-    print '<br>';
+    
+    
+    print '<br><br>'."\n";
 
 
     // List

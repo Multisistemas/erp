@@ -304,11 +304,13 @@ abstract class CommonDocGenerator
 
     	$now=dol_now('gmt');	// gmt
     	$array_other = array(
-   			'current_date'=>dol_print_date($now,'day','tzuser'),
-   			'current_datehour'=>dol_print_date($now,'dayhour','tzuser'),
+    	    // Date in default language
+    	    'current_date'=>dol_print_date($now,'day','tzuser'),
+    	    'current_datehour'=>dol_print_date($now,'dayhour','tzuser'),
    			'current_server_date'=>dol_print_date($now,'day','tzserver'),
    			'current_server_datehour'=>dol_print_date($now,'dayhour','tzserver'),
-   			'current_date_locale'=>dol_print_date($now,'day','tzuser',$outputlangs),
+    	    // Date in requested output language
+    	    'current_date_locale'=>dol_print_date($now,'day','tzuser',$outputlangs),
    			'current_datehour_locale'=>dol_print_date($now,'dayhour','tzuser',$outputlangs),
    			'current_server_date_locale'=>dol_print_date($now,'day','tzserver',$outputlangs),
    			'current_server_datehour_locale'=>dol_print_date($now,'dayhour','tzserver',$outputlangs),
@@ -350,6 +352,7 @@ abstract class CommonDocGenerator
 		$array_key.'_ref_customer'=>$object->ref_client,
 		$array_key.'_ref_supplier'=>(! empty($object->ref_fournisseur)?$object->ref_fournisseur:''),
 		$array_key.'_source_invoice_ref'=>$invoice_source->ref,
+		// Dates
         $array_key.'_hour'=>dol_print_date($object->date,'hour'),
 		$array_key.'_date'=>dol_print_date($object->date,'day'),
 		$array_key.'_date_rfc'=>dol_print_date($object->date,'dayrfc'),
@@ -360,19 +363,20 @@ abstract class CommonDocGenerator
 		$array_key.'_date_validation'=>(! empty($object->date_validation)?dol_print_date($object->date_validation,'dayhour'):''),
 		$array_key.'_date_delivery_planed'=>(! empty($object->date_livraison)?dol_print_date($object->date_livraison,'day'):''),
 		$array_key.'_date_close'=>(! empty($object->date_cloture)?dol_print_date($object->date_cloture,'dayhour'):''),
+
 		$array_key.'_payment_mode_code'=>$object->mode_reglement_code,
 		$array_key.'_payment_mode'=>($outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code)!='PaymentType'.$object->mode_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentType'.$object->mode_reglement_code):$object->mode_reglement),
 		$array_key.'_payment_term_code'=>$object->cond_reglement_code,
 		$array_key.'_payment_term'=>($outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code)!='PaymentCondition'.$object->cond_reglement_code?$outputlangs->transnoentitiesnoconv('PaymentCondition'.$object->cond_reglement_code):$object->cond_reglement),
 
 		$array_key.'_total_ht_locale'=>price($object->total_ht, 0, $outputlangs),
-		$array_key.'_total_vat_locale'=>price($object->total_tva, 0, $outputlangs),
+		$array_key.'_total_vat_locale'=>(! empty($object->total_vat)?price($object->total_vat, 0, $outputlangs):price($object->total_tva, 0, $outputlangs)),
 		$array_key.'_total_localtax1_locale'=>price($object->total_localtax1, 0, $outputlangs),
 		$array_key.'_total_localtax2_locale'=>price($object->total_localtax2, 0, $outputlangs),
 		$array_key.'_total_ttc_locale'=>price($object->total_ttc, 0, $outputlangs),
 		$array_key.'_total_discount_ht_locale' => price($object->getTotalDiscount(), 0, $outputlangs),
 		$array_key.'_total_ht'=>price2num($object->total_ht),
-		$array_key.'_total_vat'=>price2num($object->total_tva),
+		$array_key.'_total_vat'=>(! empty($object->total_vat)?price2num($object->total_vat):price2num($object->total_tva)),
 		$array_key.'_total_localtax1'=>price2num($object->total_localtax1),
 		$array_key.'_total_localtax2'=>price2num($object->total_localtax2),
 		$array_key.'_total_ttc'=>price2num($object->total_ttc),
@@ -444,10 +448,13 @@ abstract class CommonDocGenerator
 			'line_price_ht_locale'=>price($line->total_ht, 0, $outputlangs),
 			'line_price_ttc_locale'=>price($line->total_ttc, 0, $outputlangs),
 			'line_price_vat_locale'=>price($line->total_tva, 0, $outputlangs),
-			'line_date_start'=>$line->date_start,
-			'line_date_start_rfc'=>dol_print_date($line->date_start,'dayrfc'),
-			'line_date_end'=>$line->date_end,
-			'line_date_end_rfc'=>dol_print_date($line->date_end,'dayrfc')
+		    // Dates
+			'line_date_start'=>dol_print_date($line->date_start, 'day', 'tzuser'),
+			'line_date_start_locale'=>dol_print_date($line->date_start, 'day', 'tzuser', $outputlangs),
+		    'line_date_start_rfc'=>dol_print_date($line->date_start, 'dayrfc', 'tzuser'),
+		    'line_date_end'=>dol_print_date($line->date_end, 'day', 'tzuser'),
+		    'line_date_end_locale'=>dol_print_date($line->date_end, 'day', 'tzuser', $outputlangs),
+		    'line_date_end_rfc'=>dol_print_date($line->date_end, 'dayrfc', 'tzuser'),
 		);
 
 		// Retrieve extrafields
@@ -586,9 +593,10 @@ abstract class CommonDocGenerator
 			{
 				if (strlen($object->array_options['options_'.$key])>0)
 				{
-					$object->array_options['options_'.$key] = dol_print_date($object->array_options['options_'.$key],'day');                                       // using company output language
-					$object->array_options['options_'.$key.'_locale'] = dol_print_date($object->array_options['options_'.$key],'day','tzserver',$outputlangs);     // using output language format
-					$object->array_options['options_'.$key.'_rfc'] = dol_print_date($object->array_options['options_'.$key],'dayrfc');                             // international format
+					$date = $object->array_options['options_'.$key];
+					$object->array_options['options_'.$key] = dol_print_date($date,'day');                                       // using company output language
+					$object->array_options['options_'.$key.'_locale'] = dol_print_date($date,'day','tzserver',$outputlangs);     // using output language format
+					$object->array_options['options_'.$key.'_rfc'] = dol_print_date($date,'dayrfc');                             // international format
 				}
 				else
 				{
@@ -596,12 +604,17 @@ abstract class CommonDocGenerator
 					$object->array_options['options_'.$key.'_locale'] = '';
 					$object->array_options['options_'.$key.'_rfc'] = '';
 				}
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_locale' => $object->array_options['options_'.$key.'_locale']));
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_rfc' => $object->array_options['options_'.$key.'_rfc']));
 			}
 			else if($extrafields->attribute_type[$key] == 'datetime')
 			{
-				$object->array_options['options_'.$key] = ($object->array_options['options_'.$key]!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour'):'');                            // using company output language
-				$object->array_options['options_'.$key.'_locale'] = ($object->array_options['options_'.$key]!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour','tzserver',$outputlangs):'');    // using output language format
-				$object->array_options['options_'.$key.'_rfc'] = ($object->array_options['options_'.$key]!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhourrfc'):'');                             // international format
+				$datetime = $object->array_options['options_'.$key];
+				$object->array_options['options_'.$key] = ($datetime!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour'):'');                            // using company output language
+				$object->array_options['options_'.$key.'_locale'] = ($datetime!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhour','tzserver',$outputlangs):'');    // using output language format
+				$object->array_options['options_'.$key.'_rfc'] = ($datetime!="0000-00-00 00:00:00"?dol_print_date($object->array_options['options_'.$key],'dayhourrfc'):'');                             // international format
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_locale' => $object->array_options['options_'.$key.'_locale']));
+				$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key.'_rfc' => $object->array_options['options_'.$key.'_rfc']));
 			}
 			$array_to_fill=array_merge($array_to_fill,array($array_key.'_options_'.$key => $object->array_options['options_'.$key]));
 		}
