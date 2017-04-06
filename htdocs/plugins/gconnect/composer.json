@@ -1,0 +1,7 @@
+{
+    "require": {
+        "zeroclipboard/zeroclipboard": "*",
+        "opauth/opauth": "*",
+        "opauth/google": "*"
+    }
+}

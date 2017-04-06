@@ -1,0 +1,55 @@
+# Dolibarr language file - es_ES - GConnect
+CHARSET=UTF-8
+# Module
+ModuleName=GConnect OAuth 2
+ModuleDesc=Autenticación de usuarios a través de Google
+# Admin
+Config=Configuración
+Support=Soporte
+About=Acerca de
+# Config
+GoogleApiConfig=Configuración de Google API
+ImportFrom=Importar de
+ManualConfiguration=Configuración manual
+JavascriptOrigin=Origen de Javascript
+RedirectURL=URL de redirección
+JSONConfigFile=Archivo de configuración (JSON)
+ClientId=Id del cliente
+ClientSecret=Secreto del cliente
+EmailDomain=Ingrese el dominio de correo permitido
+BadDomain=Dominio incorrecto: No utilice el símbolo @
+## Messages
+Saved=Guardado
+BadFile=Error: Credenciales en JSON incorrectas
+UnexpectedError=Error inesperado
+Instructions1=Para permitir a Dolibarr comunicarse con Google, necesita registrarse en la <a href="https://console.developers.google.com" target="_blank">Google Developers Console</a>.<br><ul><li>Ingrese con su cuenta de Google.</li><li>Cree un nuevo proyecto.</li><li>Elija un nombre de proyecto (ejemplo: "Dolibarr").</li><li>Cualquier ID de proyecto servirá.</li><li>Cree el proyecto.</li><li>Utilice "Enable an API" desde el dashboard o el "API & AUTH", "APIs" menú.</li></ul>Habilite las APIs necesarias para el módulo:
+Instructions2=Ir a "Credentials".<br>Cree un nuevo "Oauth Client ID" con los siguientes parámetros:<ul><li>APPLICATION TYPE: Web application</li><li>AUTHORIZED JAVASCRIPT ORIGINS: copy/paste el Origen de Javascript de abajo</li><li>AUTHORIZED REDIRECT URI: copy/paste la URL de redirección de abajo</li></ul>
+Instructions3=Descargue el JSON <b>desde el recientemente creado "Client ID for web application"</b> y cárguelo utilizando el formulario de abajo.
+Instructions4=Felicitaciones, ha finalizado de configurar Dolibarr para que pueda comunicarse con Google.
+# About
+Version=Versión:
+Publisher=Publisher
+License=Licencia
+Credits=Créditos:
+Development=Desarrollo:
+ProjectManager=Gerente de proyecto
+SoftwareEngineer=Ingeniero de software
+Libraries=Librerías:
+Contains=Contiene:
+Ressources=Recursos
+# User card tab
+EnabledServices=Servicios activos
+AvailableServices=Servicios disponibles
+AccessToken=Acceso a los servicios
+TokenOk=Activo
+TokenKo=Inactivo
+RequestToken=Habilitado
+DeleteToken=Deshabilitado
+Retry=Reintentar
+## Messages
+NoEmail=Porfavor ingrese su cuenta de correo de Google
+InvalidConfiguration=Su configuración es inválida<br>Por favor contacte con el administrador de sistemas 
+OperationSuccessful=Operación exitosa
+OperationFailed=Operación fallida
+# Login tpl
+AccessDenied=Acceso restringido: Solo se permiten cuentas de
