@@ -60,9 +60,13 @@ if ($actual_link == $server_google || $actual_link == $server_root || $actual_li
 	//$Opauth = new Opauth( $config, false );	
 	$control = new Control($conf, $db);
 	$Opauth = $control->buildOpauth();
+	echo "Este es el primer Opauth:<br>";
+	var_dump($Opauth);
 } else if (isset($_GET["code"])) {
 	$control = new Control($conf, $db);
 	$Opauth = $control->rebuildOpauth();
+	echo "Este es el segundo Opauth:<br>";
+	var_dump($Opauth);
 }
 
 
@@ -343,6 +347,8 @@ if (! empty($conf->google->enabled) && ! empty($conf->global->MAIN_GOOGLE_AD_CLI
 * Fetch auth response, based on transport configuration for callback
 */
 $response = null;
+
+$Opauth->env['callback_transport'];
 
 if ($Opauth->env['callback_transport'] !== null && !empty($Opauth->env['callback_transport'])) {
 	switch($Opauth->env['callback_transport']) {
