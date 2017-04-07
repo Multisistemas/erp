@@ -362,7 +362,7 @@ if ($Opauth->env['callback_transport'] !== null && !empty($Opauth->env['callback
 		break;
 }
 
-//var_dump($response);
+var_dump($response);
 
 if (empty($response['auth']) || empty($response['timestamp']) || empty($response['signature']) || empty($response['auth']['provider']) || empty($response['auth']['uid'])) {
 	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: orange;">Inicio de sesión: </strong>Aún no se obtienen datos de inicio de sesión'."</p></div><br>\n";
