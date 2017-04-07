@@ -38,6 +38,9 @@ class Control {
 	}
 
 	public function SetOpauthConfig(){
+
+		$host = ((array_key_exists('HTTPS', $_SERVER) && $_SERVER['HTTPS'])?'https':'http').'://'.$_SERVER['HTTP_HOST'];
+
 		return $config = array(
 				'path' => '/index.php/',
 				'callback_url' => $host.'/index.php',
