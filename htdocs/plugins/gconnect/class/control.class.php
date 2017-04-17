@@ -43,7 +43,7 @@ class Control {
 
 		$temp = $this->global_conf->global->GC_ORIGIN_CALL;
 
-		if ($temp !== NULL || !empty($temp)) {
+		if ($temp !== NULL && !empty($temp)) {
 			if ($temp == '/'){
 				$path = '/index.php/';
 			} else {
