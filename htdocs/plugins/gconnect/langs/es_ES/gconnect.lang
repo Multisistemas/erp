@@ -17,7 +17,7 @@ RedirectURL=URL de redirección
 JSONConfigFile=Archivo de configuración (JSON)
 ClientId=Id del cliente
 ClientSecret=Secreto del cliente
-EmailDomain=Ingrese el dominio de correo permitido
+EmailDomain=Ingrese el/los dominios de correo permitidos
 BadDomain=Dominio incorrecto: No utilice el símbolo @
 OriginCall=Ingrese la dirección de llamada de origen
 ## Messages

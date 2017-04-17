@@ -17,7 +17,7 @@ RedirectURL=Redirect URL
 JSONConfigFile=JSON configuration file
 ClientId=Client ID
 ClientSecret=Client Secret
-EmailDomain=Insert email domain allowed
+EmailDomain=Insert email domains allowed
 BadDomain=Incorrect domain: don't use @
 OriginCall=Insert origin call address
 ## Messages

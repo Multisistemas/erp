@@ -68,6 +68,7 @@ if ($actual_link == $server_google || $actual_link == $server_root || $actual_li
 
 }
 
+var_dump($Opauth);
 
 ?>
 
@@ -366,6 +367,8 @@ if ($Opauth->env['callback_transport'] !== null && !empty($Opauth->env['callback
 		echo '<strong style="color: red;">Error: </strong>Unsupported callback_transport.'."<br>\n";
 		break;
 }
+
+var_dump($response);
 
 if (empty($response['auth']) || empty($response['timestamp']) || empty($response['signature']) || empty($response['auth']['provider']) || empty($response['auth']['uid'])) {
 	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: orange;">Login: </strong>No login data yet, try with the red button'."</p></div><br>\n";
