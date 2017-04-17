@@ -8,7 +8,8 @@ Config=Configuración
 Support=Soporte
 About=Acerca de
 # Config
-GoogleApiConfig=Configuración de Google API
+GoogleApiConfig=Configuración de las APIs de Google
+OtherConfig=Otras configuraciones del módulo
 ImportFrom=Importar de
 ManualConfiguration=Configuración manual
 JavascriptOrigin=Origen de Javascript
@@ -18,6 +19,7 @@ ClientId=Id del cliente
 ClientSecret=Secreto del cliente
 EmailDomain=Ingrese el dominio de correo permitido
 BadDomain=Dominio incorrecto: No utilice el símbolo @
+OriginCall=Ingrese la dirección de llamada de origen
 ## Messages
 Saved=Guardado
 BadFile=Error: Credenciales en JSON incorrectas
@@ -26,6 +28,8 @@ Instructions1=Para permitir a Dolibarr comunicarse con Google, necesita registra
 Instructions2=Ir a "Credentials".<br>Cree un nuevo "Oauth Client ID" con los siguientes parámetros:<ul><li>APPLICATION TYPE: Web application</li><li>AUTHORIZED JAVASCRIPT ORIGINS: copy/paste el Origen de Javascript de abajo</li><li>AUTHORIZED REDIRECT URI: copy/paste la URL de redirección de abajo</li></ul>
 Instructions3=Descargue el JSON <b>desde el recientemente creado "Client ID for web application"</b> y cárguelo utilizando el formulario de abajo.
 Instructions4=Felicitaciones, ha finalizado de configurar Dolibarr para que pueda comunicarse con Google.
+Instructions5=Si ud accede a Dolibarr desde su dominio raíz, por ejemplo, "www.midominio.com", debe dejar la dirección por defecto "/". Si Dolibarr se encuentra instalado en una subcarpeta, por ejemplo, "www.midominio.com/micarpeta/", la dirección de origen debe ser: micarpeta
+Instructions6=Ingrese el o los dominios de correo permitidos separados por coma, sin utilizar el simbolo "@", por ejemplo, midominio.com, otrodominio.org
 # About
 Version=Versión:
 Publisher=Publisher
@@ -36,20 +40,14 @@ ProjectManager=Gerente de proyecto
 SoftwareEngineer=Ingeniero de software
 Libraries=Librerías:
 Contains=Contiene:
-Ressources=Recursos
-# User card tab
-EnabledServices=Servicios activos
-AvailableServices=Servicios disponibles
-AccessToken=Acceso a los servicios
-TokenOk=Activo
-TokenKo=Inactivo
-RequestToken=Habilitado
-DeleteToken=Deshabilitado
-Retry=Reintentar
+Ressources=Recursos:
 ## Messages
-NoEmail=Porfavor ingrese su cuenta de correo de Google
 InvalidConfiguration=Su configuración es inválida<br>Por favor contacte con el administrador de sistemas 
 OperationSuccessful=Operación exitosa
 OperationFailed=Operación fallida
 # Login tpl
-AccessDenied=Acceso restringido: Solo se permiten cuentas de
+AccessDenied=Acceso restringido: Sólo se permiten cuentas de
+AccessDenied2=que posean un usuario activo en este sistema.
+# ZeroClipBoard
+CopyToClipboard=Copiar
+CopiedToClipboard=Copiado al portapapeles

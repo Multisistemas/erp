@@ -7,7 +7,7 @@ $(document).ready(function(){
 
 		form.after('<div id="gcontainer" style="text-align: center; margin: 0px auto; max-width: 560px;">'+ 
 				'<a id="signinButton" href="'+host+'/index.php/google">'+
-				'Iniciar sesión con Google!'+
+				'Login with Google!'+
 				'</a></div>');
 
 		$("#signinButton").css({

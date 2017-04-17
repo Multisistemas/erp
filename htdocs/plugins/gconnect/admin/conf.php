@@ -107,6 +107,10 @@ if ($action == 'domain'){
 	}
 }
 
+if ($action == 'origin') {
+    $theorigin = GETPOST('theorigin', 'alpha');
+}
+
 // Set constants common to update and upload actions
 if (($action == 'upload' || $action == 'update') && !$error) {
     $res = dolibarr_set_const(
@@ -171,6 +175,33 @@ if (($action == 'domain') && !$error){
 
 }
 
+if (($action == 'origin') && !$error){
+    $res = dolibarr_set_const(
+        $db,
+        'GC_ORIGIN_CALL',
+        $theorigin,
+        '',
+        0,
+        '',
+        $conf->entity
+  );
+
+  if (!$res > 0) {
+    $error++;
+  }
+
+  if (!$error) {
+        $db->commit();
+        $mesg = '<div class="ok">' . $langs->trans("Saved") . '</div>';
+    } else {
+        $db->rollback();
+        $mesg = '<div class="error">'
+            . $langs->trans("UnexpectedError")
+            . '</div>';
+    }
+
+}
+
 /**
  * view
  */
@@ -197,10 +228,10 @@ dol_htmloutput_mesg($mesg);
 print_titre($langs->trans("GoogleApiConfig"));
 
 echo '<br>';
-// Import configuration from google's api console json file
+
 echo '<p>',
 $langs->trans("Instructions1");
-// TODO: derive table from installed modules
+
 echo '<ul><li>Contacts API</li><li>Google+ API</li></ul>';
 echo $langs->trans("Instructions2");
 echo InitCopyToClipboardButton();
@@ -227,22 +258,47 @@ echo '<form enctype="multipart/form-data" method="POST" action="', $_SERVER['PHP
     '<input type="hidden" name="token" value="', $_SESSION['newtoken'], '">',
     '<input type="hidden" name="action" value="upload">',
     '<input type="hidden" name="MAX_FILE_SIZE" value="1000">',
-    '<input type="file" name = "jsonConfig" required="required">',
-    '<input type="submit" class="button" value ="',
+    '<input type="file" class="gc_file_btn" name = "jsonConfig" required="required">',
+    '<input type="submit" class="gc_btn" value ="',
     $langs->trans("Upload"), '">',
     '</fieldset>',
     '</form>',
     '<br>';
 echo $langs->trans("Instructions4"),
     '</p>';
+
+echo '<hr class="gc_hr">';
+echo '<br>';
+print_titre($langs->trans("OtherConfig"));
+
+echo '<p>';
+echo $langs->trans("Instructions6");
+echo '</p>';
+
 echo '<br>',
-		'<form method="POST" action="', $_SERVER['PHP_SELF'], '">',
+	'<form method="POST" action="', $_SERVER['PHP_SELF'], '">',
     '<fieldset>',
     '<legend>', $langs->trans('EmailDomain'), '</legend>',
     '<input type="hidden" name="token" value="', $_SESSION['newtoken'], '">',
     '<input type="hidden" name="action" value="domain">',
-    '<input type="text" name="thedomain" size="80" value="', $conf->global->GC_EMAIL_DOMAIN,'" placeholder="mydomain.com">',
-    '<input type="submit" class="button" value ="', $langs->trans("Save"), '">',
+    '<input type="text" name="thedomain" size="80" value="', $conf->global->GC_EMAIL_DOMAIN,'" placeholder="mydomain.com required="required">',
+    '<input type="submit" class="gc_btn" value ="', $langs->trans("Save"), '">',
+    '</fieldset>',
+    '</form>',
+    '<br>';
+
+echo '<p>';
+echo $langs->trans("Instructions5");
+echo '</p>';
+
+echo '<br>',
+    '<form method="POST" action="', $_SERVER['PHP_SELF'], '">',
+    '<fieldset>',
+    '<legend>', $langs->trans('OriginCall'), '</legend>',
+    '<input type="hidden" name="token" value="', $_SESSION['newtoken'], '">',
+    '<input type="hidden" name="action" value="origin">',
+    '<input type="text" name="theorigin" size="80" value="', $conf->global->GC_ORIGIN_CALL,'" placeholder="/" required="required">',
+    '<input type="submit" class="gc_btn" value ="', $langs->trans("Save"), '">',
     '</fieldset>',
     '</form>',
     '<br>';
@@ -266,7 +322,7 @@ echo '<form method="POST" action="', $_SERVER['PHP_SELF'], '">',
     '<input type="password" name="clientSecret" value="', $conf->global->GC_OAUTH_CLIENT_SECRET, '" required="required">',
     '</td>',
     '<td>',
-    '<input type="submit" class="button" value ="', $langs->trans("Save"), '">',
+    '<input type="submit" class="gc_btn" value ="', $langs->trans("Save"), '">',
     '</td>',
     '</table>',
     '</form>';

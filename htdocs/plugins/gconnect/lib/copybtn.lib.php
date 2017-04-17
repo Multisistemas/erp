@@ -39,7 +39,7 @@ function CopyToClipboardButton($text, $id = 'copy-button', $title = 'CopyToClipb
     return '
         <button
             type="button"
-            class="button"
+            class="gc_btn gc_zc_btn"
             id="' . $id . '"
             data-clipboard-text="' . $text . '">
         <img src="' . dol_buildpath('/gconnect/img/', 2) . 'copy.png">'

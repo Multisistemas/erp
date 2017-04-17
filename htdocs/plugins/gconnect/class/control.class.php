@@ -13,9 +13,9 @@
  * Module file for users control access
  */
 
-define('OPAUTH_LIB_DIR', dirname(__FILE__).'/../vendor/opauth/opauth/lib/Opauth/');
+define('OPAUTH_LIB_DIR', dirname(__FILE__).'/../vendor/autoload.php');
 
-require_once(OPAUTH_LIB_DIR.'Opauth.php');
+require_once(OPAUTH_LIB_DIR);
 
 class Control {
 
@@ -24,7 +24,7 @@ class Control {
 
   function __construct($conf, $db) {
     $this->global_conf = $conf;
-    	$this->global_db = $db;
+    $this->global_db = $db;
   }
 
   public function buildOpauth(){
@@ -41,9 +41,21 @@ class Control {
 
 		$host = ((array_key_exists('HTTPS', $_SERVER) && $_SERVER['HTTPS'])?'https':'http').'://'.$_SERVER['HTTP_HOST'];
 
+		$temp = $this->global_conf->global->GC_ORIGIN_CALL;
+
+		if ($temp !== NULL || !empty($temp)) {
+			if ($temp == '/'){
+				$path = '/index.php/';
+			} else {
+				$path = '/'.$temp.'/index.php/';	
+			}
+		} else {
+			$path = '/index.php/';
+		}
+
 		return $config = array(
-				'path' => '/index.php/',
-				'callback_url' => $host.'/index.php',
+				'path' => $path,
+				'callback_url' => $host,
 				'security_salt' => 'LHFm11lYf3Fyw5W10a44aa5x4W1KsVrieQCnpBzzpTBMA5vJidQKDo8pMJbmw22A1C8v',
 			  'debug' =>true,
 				'Strategy' => array(
@@ -58,15 +70,28 @@ class Control {
 	// Validate the domain 
 	public function validate($email) {
 
-		$domain = '@'.$this->global_conf->global->GC_EMAIL_DOMAIN;
+		$text = $this->global_conf->global->GC_EMAIL_DOMAIN;
+		$finded = false;
 
-		$email_domain = strstr($email, '@');
+		$trimmed = trim($text);
+		$domains = str_replace(' ', '', $trimmed);
+		$array = explode(',', $domains);	
 
-		if ($email_domain === $domain) {
+		foreach ($array as $domain) {
+			$thisdomain = '@'.$domain;
+			$email_domain = strstr($email, '@');
+
+			if ($thisdomain == $email_domain){
+				$finded = true;
+			}
+		}
+
+		if (false != $finded) {
 			return true;
 		} else {
 			return false;
 		}
+
 	}
 
 
@@ -78,7 +103,6 @@ class Control {
 
 		$sql = "SELECT * FROM ".MAIN_DB_PREFIX."user ORDER BY rowid ASC";
 
-		//dol_syslog($script_file, LOG_DEBUG);
 		$resql = $this->global_db->query($sql);
 
 		if ($resql) {

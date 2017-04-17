@@ -56,17 +56,16 @@ $actual_link = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP
 $server_root = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/";
 $server_index = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php";
 $server_google = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php/google";
+
 if ($actual_link == $server_google || $actual_link == $server_root || $actual_link == $server_index) {
-	//$Opauth = new Opauth( $config, false );	
+
 	$control = new Control($conf, $db);
 	$Opauth = $control->buildOpauth();
-	echo "Este es el primer Opauth:<br>";
-	var_dump($Opauth);
+
 } else if (isset($_GET["code"])) {
 	$control = new Control($conf, $db);
 	$Opauth = $control->rebuildOpauth();
-	echo "Este es el segundo Opauth:<br>";
-	var_dump($Opauth);
+
 }
 
 
@@ -368,14 +367,14 @@ if ($Opauth->env['callback_transport'] !== null && !empty($Opauth->env['callback
 		break;
 }
 
-var_dump($response);
-
 if (empty($response['auth']) || empty($response['timestamp']) || empty($response['signature']) || empty($response['auth']['provider']) || empty($response['auth']['uid'])) {
-	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: orange;">Inicio de sesión: </strong>Aún no se obtienen datos de inicio de sesión'."</p></div><br>\n";
+	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: orange;">Login: </strong>No login data yet, try with the red button'."</p></div><br>\n";
 } elseif (!$Opauth->validate(sha1(print_r($response['auth'], true)), $response['timestamp'], $response['signature'], $reason)) {
 	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: red;">Invalid auth response: </strong>'.$reason.".</p></div><br>\n";
+} elseif ($response['error']['code'] == 'access_token_error'){
+	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: red;">Error: </strong>Could not get a response from Google, please try again.</p></div><br>';
 } else {
-		echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: green;">OK: </strong>Se han recibido las credenciales. Procesando...'."</p></div><br>\n";
+	echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: green;">OK: </strong>Credentials have been received. Processing...'."</p></div><br>\n";
 
 		$email = $response['auth']['raw']['email'];
 
@@ -406,12 +405,13 @@ if (empty($response['auth']) || empty($response['timestamp']) || empty($response
 		        pass.value = <?php echo '"'.$thepass.'"'; ?>;
 
 		        document.getElementById('btn').click();
+
 					</script>
 				<?php
 			}
 
 		} else {
-			echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: red;">'.$langs->trans('AccessDenied').': '.$conf->global->GC_EMAIL_DOMAIN.'</p></div><br>\n';
+			echo '<div style="text-align: center; margin: 0px auto; max-width: 560px;"><p><strong style="color: red;">Error: </strong>'.$langs->trans('AccessDenied').': <strong>'.$conf->global->GC_EMAIL_DOMAIN.'</strong>'.' '.$langs->trans('AccessDenied2').'</p></div><br>\n';
 		}
 	}
 }

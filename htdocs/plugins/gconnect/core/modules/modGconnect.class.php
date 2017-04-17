@@ -57,7 +57,8 @@ class modGconnect extends DolibarrModules {
 		$this->const = array(
 			0	=> array('GC_OAUTH_CLIENT_ID','string','','Oauth client id value',0,'current',0),
 			1	=> array('GC_OAUTH_CLIENT_SECRET','string','','Oauth client secret value',0,'current',0),
-			2 => array('GC_EMAIL_DOMAIN','string','','Email domain allowed',1)
+			2 => array('GC_EMAIL_DOMAIN','string','','Email domain allowed',1),
+			3 => array('GC_ORIGIN_CALL','string','','Origin Oauth call',1)
 		);
     $this->tabs = array(
       'user:+google:Google:@gconnect:$user->rights->gconnect->use'

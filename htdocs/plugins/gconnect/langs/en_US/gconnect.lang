@@ -9,6 +9,7 @@ Support=Support
 About=About
 # Config
 GoogleApiConfig=Google API configuration
+OtherConfig=Other module configurations
 ImportFrom=Import from
 ManualConfiguration=Manual configuration
 JavascriptOrigin=Javascript origin
@@ -18,6 +19,7 @@ ClientId=Client ID
 ClientSecret=Client Secret
 EmailDomain=Insert email domain allowed
 BadDomain=Incorrect domain: don't use @
+OriginCall=Insert origin call address
 ## Messages
 Saved=Saved
 BadFile=Bad file
@@ -26,6 +28,8 @@ Instructions1=To allow Dolibarr to communicate with Google, you need to register
 Instructions2=Go to "Credentials".<br>Create a new Oauth Client ID with the following parameters:<ul><li>APPLICATION TYPE: Web application</li><li>AUTHORIZED JAVASCRIPT ORIGINS: copy/paste the Javascript origin below</li><li>AUTHORIZED REDIRECT URI: copy/paste the Redirect URL below</li></ul>
 Instructions3=Download JSON <b>from the newly created "Client ID for web application"</b> and upload it using the form below.
 Instructions4=Congratulations, you just allowed Dolibarr to communicate with Google.
+Instructions5=If you access Dolibarr from your root domain, for example, "www.mydomain.com", you should leave the default address "/". If Dolibarr was intalled in a subfolder, for example, "www.mydomain.com/myfolder/", the source address should be: myfolder
+Instructions6=Enter the allowed comma-separated email domains or domains, without using the "@" symbol, for example, mydomain.com, anotherdomain.org
 # About
 Version=Version:
 Publisher=Publisher
@@ -37,19 +41,13 @@ SoftwareEngineer=Software engineer
 Libraries=Libraries:
 Contains=Contains:
 Ressources=Resources:
-# User card tab
-EnabledServices=Active services
-AvailableServices=Available services
-AccessToken=Services access
-TokenOk=Active
-TokenKo=Inactive
-RequestToken=Enable
-DeleteToken=Disable
-Retry=Retry
 ## Messages
-NoEmail=Please fill your Google email address in your user card
 InvalidConfiguration=Your configuration is invalid<br>Please contact your system administrator
 OperationSuccessful=Operation successful
 OperationFailed=Operation failed
 # Login tpl
 AccessDenied=Access denied: Only accounts of
+AccessDenied2=with active users in this system are allowed.
+# ZeroClipBoard
+CopyToClipboard=Copy to clipboard
+CopiedToClipboard=Copied to clipboard
