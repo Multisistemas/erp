@@ -53,16 +53,35 @@ $langs->load('admin');
 $langs->load('help');
 
 $actual_link = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-$server_root = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/";
-$server_index = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php";
-$server_google = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php/google";
 
-if ($actual_link == $server_google || $actual_link == $server_root || $actual_link == $server_index) {
+if (empty($conf->global->GC_ORIGIN_CALL) || $conf->global->GC_ORIGIN_CALL == NULL){
+    $server_root = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/";
+		$server_index = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php";
+		$server_google = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php/google";
+		$server_logout = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/user/logout.php";
+
+} else {
+    if ($conf->global->GC_ORIGIN_CALL == '/'){
+        $server_root = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/";
+				$server_index = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php";
+				$server_google = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/index.php/google";
+				$server_logout = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"."/user/logout.php";
+
+    } else {
+        $server_root = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/".$conf->global->GC_ORIGIN_CALL."/";
+				$server_index = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/".$conf->global->GC_ORIGIN_CALL."/index.php";
+				$server_google = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/".$conf->global->GC_ORIGIN_CALL."/index.php/google";
+				$server_logout = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/".$conf->global->GC_ORIGIN_CALL."/user/logout.php";
+    }
+}
+
+if ($actual_link == $server_google || $actual_link == $server_root || $actual_link == $server_index || $actual_link == $server_logout) {
 
 	$control = new Control($conf, $db);
 	$Opauth = $control->buildOpauth();
 
 } else if (isset($_GET["code"])) {
+
 	$control = new Control($conf, $db);
 	$Opauth = $control->rebuildOpauth();
 
@@ -416,6 +435,34 @@ if (empty($response['auth']) || empty($response['timestamp']) || empty($response
 	}
 }
 ?>
+
+<script type="text/javascript">
+	$(document).ready(function(){
+	if ($("form#login").length > 0){
+		var form = $("form#login");
+		var protocol = location.protocol;
+		var slashes = protocol.concat("//");
+		var host = <?php echo '"'.$server_google.'"'; ?>;
+
+		console.log(host);
+
+		form.after('<div id="gcontainer" style="text-align: center; margin: 0px auto; max-width: 560px;">'+ 
+				'<a id="signinButton" href="'+host+'">'+
+				'Login with Google!'+
+				'</a></div>');
+
+			$("#signinButton").css({
+				'text-decoration':'none',
+				'padding':'10px 20px',
+				'background-color':'#c53929',
+				'color':'#ffffff',
+				'border-radius':'5px',
+				'font-size':'medium',
+			});
+		}
+	});	
+
+</script>
 
 </body>
 </html>

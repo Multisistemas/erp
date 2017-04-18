@@ -5,6 +5,18 @@
  * Copyright (C) 2017 Herson Cruz <herson@multisistemas.com.sv>
  * Copyright (C) 2017 Luis Medrano <lmedrano@multisistemas.com.sv>
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -38,7 +50,6 @@ $mesg = ""; // User message
 // Oauth2 params
 $client_id = '';
 $client_secret = '';
-$callback_url = dol_buildpath('/index.php/google/oauth2callback', 2);
 
 // Build javascript origin URI
 $javascript_origin = 'http';
@@ -55,9 +66,25 @@ if (
     $javascript_origin .= ':' . $_SERVER['SERVER_PORT'];
 }
 
+
 $langs->load('gconnect@gconnect');
 $langs->load('admin');
 $langs->load('help');
+
+
+//////////
+
+if (empty($conf->global->GC_ORIGIN_CALL) || $conf->global->GC_ORIGIN_CALL == NULL){
+    $thecallback = $langs->trans("UndefinedCallback");
+} else {
+    if ($conf->global->GC_ORIGIN_CALL == '/'){
+        $thecallback = $javascript_origin.'/index.php/google/oauth2callback';
+    } else {
+        $thecallback = $javascript_origin.'/'.$conf->global->GC_ORIGIN_CALL.'/index.php/google/oauth2callback';
+    }
+}
+
+//////////
 
 // Access control
 if (!$user->admin) {
@@ -77,7 +104,7 @@ if ($action == 'upload') {
     // TODO: write a file verification function to have better error messages for each case
     if (
         $params === null ||
-        ! in_array($callback_url, $params['web']['redirect_uris']) ||
+        ! in_array($thecallback, $params['web']['redirect_uris']) ||
         ! in_array($javascript_origin, $params['web']['javascript_origins'])
     ) {
         $error++;
@@ -243,14 +270,32 @@ echo '<form>',
     '</fieldset>',
     '</form>',
     '<br>';
-echo '<form>',
+
+echo '<p>';
+echo $langs->trans("Instructions5");
+echo '</p>';
+
+echo '<br>',
+    '<form method="POST" action="', $_SERVER['PHP_SELF'], '">',
     '<fieldset>',
-    '<legend>', $langs->trans('RedirectURL'), '</legend>',
-    '<input type="text" disabled="disabled" name="callback_url" size="80" value="' . $callback_url . '">',
-    CopyToClipboardButton($callback_url, 'callback_url'),
+    '<legend>', $langs->trans('OriginCall'), '</legend>',
+    '<input type="hidden" name="token" value="', $_SESSION['newtoken'], '">',
+    '<input type="hidden" name="action" value="origin">',
+    '<input type="text" name="theorigin" size="80" value="', $conf->global->GC_ORIGIN_CALL,'" placeholder="/" required="required">',
+    '<input type="submit" class="gc_btn" value ="', $langs->trans("Save"), '">',
     '</fieldset>',
     '</form>',
     '<br>';
+
+echo '<form>',
+    '<fieldset>',
+    '<legend>', $langs->trans('RedirectURL'), '</legend>',
+    '<input type="text" disabled="disabled" name="thecallback" size="80" value="'.$thecallback. '">',
+    CopyToClipboardButton($thecallback, 'thecallback'),
+    '</fieldset>',
+    '</form>',
+    '<br>';
+
 echo $langs->trans("Instructions3");
 echo '<form enctype="multipart/form-data" method="POST" action="', $_SERVER['PHP_SELF'], '">',
     '<fieldset>',
@@ -281,23 +326,7 @@ echo '<br>',
     '<legend>', $langs->trans('EmailDomain'), '</legend>',
     '<input type="hidden" name="token" value="', $_SESSION['newtoken'], '">',
     '<input type="hidden" name="action" value="domain">',
-    '<input type="text" name="thedomain" size="80" value="', $conf->global->GC_EMAIL_DOMAIN,'" placeholder="mydomain.com required="required">',
-    '<input type="submit" class="gc_btn" value ="', $langs->trans("Save"), '">',
-    '</fieldset>',
-    '</form>',
-    '<br>';
-
-echo '<p>';
-echo $langs->trans("Instructions5");
-echo '</p>';
-
-echo '<br>',
-    '<form method="POST" action="', $_SERVER['PHP_SELF'], '">',
-    '<fieldset>',
-    '<legend>', $langs->trans('OriginCall'), '</legend>',
-    '<input type="hidden" name="token" value="', $_SESSION['newtoken'], '">',
-    '<input type="hidden" name="action" value="origin">',
-    '<input type="text" name="theorigin" size="80" value="', $conf->global->GC_ORIGIN_CALL,'" placeholder="/" required="required">',
+    '<input type="text" name="thedomain" size="80" value="', $conf->global->GC_EMAIL_DOMAIN,'" placeholder="mydomain.com" required="required">',
     '<input type="submit" class="gc_btn" value ="', $langs->trans("Save"), '">',
     '</fieldset>',
     '</form>',

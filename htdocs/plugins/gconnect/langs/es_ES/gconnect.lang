@@ -22,13 +22,14 @@ BadDomain=Dominio incorrecto: No utilice el símbolo @
 OriginCall=Ingrese la dirección de llamada de origen
 ## Messages
 Saved=Guardado
+UndefinedCallback=No definido
 BadFile=Error: Credenciales en JSON incorrectas
 UnexpectedError=Error inesperado
 Instructions1=Para permitir a Dolibarr comunicarse con Google, necesita registrarse en la <a href="https://console.developers.google.com" target="_blank">Google Developers Console</a>.<br><ul><li>Ingrese con su cuenta de Google.</li><li>Cree un nuevo proyecto.</li><li>Elija un nombre de proyecto (ejemplo: "Dolibarr").</li><li>Cualquier ID de proyecto servirá.</li><li>Cree el proyecto.</li><li>Utilice "Enable an API" desde el dashboard o el "API & AUTH", "APIs" menú.</li></ul>Habilite las APIs necesarias para el módulo:
 Instructions2=Ir a "Credentials".<br>Cree un nuevo "Oauth Client ID" con los siguientes parámetros:<ul><li>APPLICATION TYPE: Web application</li><li>AUTHORIZED JAVASCRIPT ORIGINS: copy/paste el Origen de Javascript de abajo</li><li>AUTHORIZED REDIRECT URI: copy/paste la URL de redirección de abajo</li></ul>
 Instructions3=Descargue el JSON <b>desde el recientemente creado "Client ID for web application"</b> y cárguelo utilizando el formulario de abajo.
 Instructions4=Felicitaciones, ha finalizado de configurar Dolibarr para que pueda comunicarse con Google.
-Instructions5=Si ud accede a Dolibarr desde su dominio raíz, por ejemplo, "www.midominio.com", debe dejar la dirección por defecto "/". Si Dolibarr se encuentra instalado en una subcarpeta, por ejemplo, "www.midominio.com/micarpeta/", la dirección de origen debe ser: micarpeta
+Instructions5=Si ud accede a Dolibarr desde su dominio raíz, por ejemplo, "www.midominio.com", debe ingresar la dirección "/". Si Dolibarr se encuentra instalado en una subcarpeta, por ejemplo, "www.midominio.com/micarpeta/", la dirección de origen debe ser: micarpeta. Guardar y recargar la pagina para ver la url de redirección.
 Instructions6=Ingrese el o los dominios de correo permitidos separados por coma, sin utilizar el simbolo "@", por ejemplo, midominio.com, otrodominio.org
 # About
 Version=Versión:

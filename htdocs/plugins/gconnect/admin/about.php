@@ -5,6 +5,18 @@
  * Copyright (C) 2017 Herson Cruz <herson@multisistemas.com.sv>
  * Copyright (C) 2017 Luis Medrano <lmedrano@multisistemas.com.sv>
  *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -78,10 +90,6 @@ echo '<address>Pinares de Suiza Pol. 12, No. 35 Santa Tecla, La Libertad El Salv
 'Tel.:+503 2207 2444</address>',
 '<a href="mailto:info@multisistemas.com.sv">info@multisistemas.com.sv</a>';
 
-/*echo '<h3>', $langs->trans("License"), '</h3>';
-echo '<a target="_blank" href="http://www.gnu.org/licenses/gpl-3.0.html">',
-'<img src="../img/logo_gpl.png" alt="GPL v.3"></a>';*/
-
 echo '<h3>', $langs->trans("Credits"), '</h3>';
 
 echo '<h4>', $langs->trans("Development"), '</h4>';
@@ -113,26 +121,6 @@ echo '<ul>',
 'ZeroClipboard is released under the MIT License.',
 '<br>',
 '</li>',
-'</ul>';/////////////
+'</ul>';
 
-//echo '<h4>' . $langs->trans("Ressources") . '</h4>';
-
-/*echo '<ul>',
-'<li>OAuth logo<br>',
-'&copy; <a target="_blank" href="http://factoryjoe.com/">Chris Messina</a><br>',
-'<a target="_blank" href="http://creativecommons.org/licenses/by-sa/3.0/legalcode">',
-'<img src="../img/ccbysa.png" alt="Creative Commons Attribution Share Alike 3.0 license"></a>',
-'</li>',
-'<li>GPLv3 logo<br>',
-'&copy;2007, 2008 ',
-'<a target="_blank" href="http://fsf.org">Free Software Foundation</a>',
-'</li>',
-'<li>ZenFusion logo<br>',
-'&copy;2011 GPC.solutions<br>',
-'Trademark Pending',
-'</li>',
-'<li>GPC.solutions logo<br>',
-'&copy;2010-2014 GPC.solutions',
-'</li>',
-'</ul>';*/
 llxFooter();
