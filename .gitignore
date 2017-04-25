@@ -4,4 +4,5 @@ htdocs/.htaccess
 documents/install.lock
 documents/dolibarr.log
 htdocs/webhook.php
-
+/.htaccess
+/htdocs/plugins/*
