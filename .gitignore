@@ -1,6 +1,7 @@
 .DS_Store
 htdocs/conf/conf.php
 htdocs/.htaccess
+documents
 documents/*
 documents/install.lock
 documents/dolibarr.log
