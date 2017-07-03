@@ -1,1 +1,0 @@
-[10-Sep-2011 14:49:15] PHP Fatal error:  Call to a member function getNomUrl() on a non-object in /home/multisis/public_html/app/erp/htdocs/comm/action/index.php on line 615

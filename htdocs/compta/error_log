@@ -1,2 +1,0 @@
-[17-Jan-2013 22:31:01] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/multisis/public_html/app/erp/htdocs/core/lib/functions.lib.php:2175) in /home/multisis/public_html/app/erp/htdocs/main.inc.php on line 793
-[17-Jan-2013 22:31:13] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/multisis/public_html/app/erp/htdocs/core/lib/functions.lib.php:2175) in /home/multisis/public_html/app/erp/htdocs/main.inc.php on line 793
