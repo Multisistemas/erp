@@ -701,7 +701,7 @@ class pdf_facmultisis extends ModelePDFFactures
 				$pdf->SetFillColor(255,255,255);
 				
 				$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
-				$pdf->SetXY($this->postotalht, 233);
+				$pdf->SetXY($this->postotalht, 231);
 				$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ht + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
 
 
@@ -737,17 +737,17 @@ class pdf_facmultisis extends ModelePDFFactures
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
 
-				$pdf->SetXY(30, 235);
+				$pdf->SetXY(30, 233);
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
 
 				
 				// Calculate the IVA percent
-				$pdf->SetXY($this->postotalht, 238);
+				$pdf->SetXY($this->postotalht, 236);
 				$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
 
 				// Total TTC
 				$index++;
-				$pdf->SetXY($this->postotalht, 260);
+				$pdf->SetXY($this->postotalht, 258);
 				
 				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
@@ -1614,12 +1614,12 @@ class pdf_facmultisis extends ModelePDFFactures
 		$pdf->MultiCell($w, 3, $title, '', 'R');*/
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,31);
+		$pdf->SetXY(50,38);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($object->ref), '', 'C');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(70,31);
+		$pdf->SetXY(70,38);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'R');
 
@@ -1641,17 +1641,17 @@ class pdf_facmultisis extends ModelePDFFactures
 		}
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,37);
+		$pdf->SetXY(30,43);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,42);
+		$pdf->SetXY(30,48);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,48);
+		$pdf->SetXY(50,53);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'C');
 
