@@ -555,11 +555,11 @@ class pdf_facmultisis extends ModelePDFFactures
 				// Total mostrado en la celda "Total"
 				if ($vatrate != '0.000') {
 					$index++;
-					$pdf->SetXY($this->postotalht, 260);
+					$pdf->SetXY($this->postotalht, 259);
 					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 				} else {
 					$index++;
-					$pdf->SetXY($this->postotalht, 260);
+					$pdf->SetXY($this->postotalht, 259);
 					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 				}
 
@@ -627,13 +627,13 @@ class pdf_facmultisis extends ModelePDFFactures
 
     	// Imprimir número de factura en el erp
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,34);
+		$pdf->SetXY(50,32);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($object->ref), '', 'C');
 
 		// Imprimir fecha en que se facturó
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(120,34);
+		$pdf->SetXY(120,33);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'C');
 
@@ -647,19 +647,19 @@ class pdf_facmultisis extends ModelePDFFactures
 		// Imprimir información de la empresa a la que se factura
 		// Nombre
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,40);
+		$pdf->SetXY(30,38);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
 		// Dirección
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,45);
+		$pdf->SetXY(30,43);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 
 		// DUI/NIT
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(95,51);
+		$pdf->SetXY(95,49);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'L');
 
