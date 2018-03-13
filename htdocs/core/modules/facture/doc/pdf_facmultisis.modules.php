@@ -388,7 +388,7 @@ class pdf_facmultisis extends ModelePDFFactures
 
 					// Si no hay IVA entonces mostrar la cantidad en la columna "Ventas Excentas"
 					if ($vatrate != '0.000') {
-						$pdf->SetXY($this->posxtva-3, $curY);
+						$pdf->SetXY($this->posxtva, $curY);
 						$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'C', 0);
 					} else {
 						$pdf->SetXY($this->posxtva+43, $curY);
@@ -493,7 +493,7 @@ class pdf_facmultisis extends ModelePDFFactures
 				} else {
 					$pdf->SetFillColor(255,255,255);
 					$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
-					$pdf->SetXY($this->postotalht - 28	, 232);
+					$pdf->SetXY($this->postotalht - 26	, 232);
 					$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ht + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
 				}
 				//////////////////////////////////////////////////////////////
@@ -559,7 +559,7 @@ class pdf_facmultisis extends ModelePDFFactures
 					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 				} else {
 					$index++;
-					$pdf->SetXY($this->postotalht, 255);
+					$pdf->SetXY($this->postotalht, 260);
 					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 				}
 
@@ -627,13 +627,13 @@ class pdf_facmultisis extends ModelePDFFactures
 
     	// Imprimir número de factura en el erp
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,37);
+		$pdf->SetXY(50,34);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($object->ref), '', 'C');
 
 		// Imprimir fecha en que se facturó
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(120,37);
+		$pdf->SetXY(120,34);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'C');
 
@@ -647,19 +647,19 @@ class pdf_facmultisis extends ModelePDFFactures
 		// Imprimir información de la empresa a la que se factura
 		// Nombre
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,43);
+		$pdf->SetXY(30,40);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
 		// Dirección
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,48);
+		$pdf->SetXY(30,45);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 
 		// DUI/NIT
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(95,54);
+		$pdf->SetXY(95,51);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'L');
 
