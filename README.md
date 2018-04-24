@@ -1,23 +1,3 @@
-# Important notes !!
-
-Para las proximas actualizaciones del sistema Dolibarr, agregar:
-
-- La traducción de es_SV 
-- Las plantillas al modulo de facturas, para generar  PDF's
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # DOLIBARR ERP & CRM
 
 ![Build status](https://img.shields.io/travis/Dolibarr/dolibarr/develop.svg) ![Downloads per day](https://img.shields.io/sourceforge/dm/dolibarr.svg)
