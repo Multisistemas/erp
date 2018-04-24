@@ -7,5 +7,5 @@ documents/install.lock
 documents/dolibarr.log
 htdocs/webhook.php
 /htdocs/.htaccess
-/htdocs/plugins/gconnect/*
+/htdocs/plugins/*
 /.idea/*
