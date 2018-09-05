@@ -9,3 +9,26 @@ htdocs/webhook.php
 /htdocs/.htaccess
 /htdocs/plugins/*
 /.idea/*
+htdocs/conf/conf.php.old
+custom2/
+test/report/
+nbproject
+default.properties
+.settings/
+.buildpath
+.gitmodules
+dolibarr_install.log
+upgrade.log
+doxygen_warnings.log
+/.project
+.idea
+*.iml
+Thumbs.db
+# Vagrant generated files
+.vagrant
+# Composer installed repositories
+/htdocs/includes/**/.git
+# Composer autoloader and unwanted files
+htdocs/includes/autoload.php
+htdocs/includes/bin/
+htdocs/includes/composer/
