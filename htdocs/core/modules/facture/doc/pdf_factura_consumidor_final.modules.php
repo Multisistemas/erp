@@ -475,7 +475,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 				$height = 200;
 			
 				
-
+				$pdf->SetFillColor(255,255,255);
 				// Si no hay IVA entonces mostrar total solo en la celda de ventas exentas
 				/*if ($vatrate != '0.000') {
 				
