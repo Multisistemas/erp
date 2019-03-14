@@ -25,7 +25,7 @@
  */
 
 /**
- *	\file       htdocs/core/modules/facture/doc/pdf_consumidorfinalmultisis.modules.php
+ *	\file       htdocs/core/modules/facture/doc/pdf_factura_exenta.modules.php
  *	\ingroup    facture
  *	\brief      File of class to generate customers invoices from crabe model
  */
@@ -41,7 +41,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/modules/facture/doc/NumberToLetterConverte
 /**
  *	Class to manage PDF invoice template
  */
-class pdf_consumidorfinalmultisis extends ModelePDFFactures
+class pdf_factura_exenta extends ModelePDFFactures
 {
     var $db;
     var $name;
@@ -85,8 +85,8 @@ class pdf_consumidorfinalmultisis extends ModelePDFFactures
 		$langs->load("bills");
 
 		$this->db = $db;
-		$this->name = "consumidorfinalmultisis";
-		$this->description = "FAC Consumidor Final (Sin descripción de IVA) - Multisis Template";
+		$this->name = "factura_exenta";
+		$this->description = "Factura exenta de IVA";
 
 		$this->type = 'pdf';
 		$formatarray=pdf_getFormat();
@@ -387,20 +387,14 @@ class pdf_consumidorfinalmultisis extends ModelePDFFactures
 
 					$total_ttc = ($conf->multicurrency->enabled && $object->multiccurency_tx != 1) ? $object->multicurrency_total_ttc : $object->total_ttc;
 
-					// Si no hay IVA entonces mostrar la cantidad en la columna "Ventas Excentas"
-					if ($vatrate != '0.000') {
-						$pdf->SetXY($this->posxtva, $curY);
-						$pdf->MultiCell(30, 3, "$ ".price($total_ttc, 0, $outputlangs), 0, 'R', 0);
-						//"$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1
-					} else {
-						$pdf->SetXY($this->posxtva+43, $curY);
-						$pdf->MultiCell(30, 3, "$ ".price($total_ttc, 0, $outputlangs), 0, 'L', 0);
-					}
+					// Columna "precio unitario"
+					$pdf->SetXY($this->posxtva, $curY);
+					$pdf->MultiCell(30, 3, "$ ".price($up_excl_tax), 0, 'R', 0); ////// --> Total with tax
 
 
+					// Cantidades de articulos facturados
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY(10, $curY);
-
+					$pdf->SetXY(7, $curY);
 					
 					if ($this->situationinvoice)
 					{
@@ -414,15 +408,17 @@ class pdf_consumidorfinalmultisis extends ModelePDFFactures
 					{
 						$pdf->MultiCell($this->posxdiscount-$this->posxqty-0.8, 4, $qty, 0, 'C');
 					}
+					
 
+					
+					//$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
+					//$pdf->SetXY($this->postotalht - 25, $curY);
+					//$pdf->MultiCell(25, 3, "$ ".price($up_excl_tax), 0, 'R', 0); ////// --> Total with tax
 
-					if ($vatrate != '0.000') {
-						// Total HT line
-						$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
-						$pdf->SetXY($this->postotalht, $curY);
-						$pdf->MultiCell(25, 3, "$ ".price($total_ttc, 0, $outputlangs), 0, 'R', 0);
-					}
-
+					// Columna "ventas afectas"
+					$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
+					$pdf->SetXY($this->postotalht - 25, $curY); // ----------------------------------------------- TOTAL PER UNITS
+					$pdf->MultiCell(25, 3, "$ ".$total_excl_tax, 0, 'R', 0);
 
 
 					$sign=1;
@@ -484,9 +480,10 @@ class pdf_consumidorfinalmultisis extends ModelePDFFactures
 				$height = 200;
 			
 				
+				$pdf->SetFillColor(255,255,255);
 
 				// Si no hay IVA entonces mostrar total solo en la celda de ventas exentas
-				if ($vatrate != '0.000') {
+				/*if ($vatrate != '0.000') {
 				
 					// Total mostrado en "SUMAS" sacado de sumar todos los cobros
 					$pdf->SetFillColor(255,255,255);
@@ -502,7 +499,7 @@ class pdf_consumidorfinalmultisis extends ModelePDFFactures
 
 					$pdf->SetXY($this->postotalht - 26	, 232);
 					$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ttc + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
-				}
+				}*/
 				//////////////////////////////////////////////////////////////
 
 
@@ -543,41 +540,35 @@ class pdf_consumidorfinalmultisis extends ModelePDFFactures
 				$convertedToLetter = new NumberToLetterConverter();
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
-				$pdf->SetXY(30, 235);
+				$pdf->SetXY(30, 220);
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
-
-				
-
 
 
 				// Calcular el la cantidad que se va a descontar por el IVA
 				if ($vatrate != '0.000') {
-					$pdf->SetXY($this->postotalht, 238);
+					//$pdf->SetXY($this->postotalht, 238);
 					//$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
 				}
+			
+
+				// Sumas
+				$pdf->SetXY($this->postotalht - 25, 216);
+				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 
+				// Total
+				$index++;
+				$pdf->SetXY($this->postotalht, 256);
+				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
-
-				// Total mostrado en la celda "Total"
-				if ($vatrate != '0.000') {
-					$index++;
-					$pdf->SetXY($this->postotalht, 259);
-					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
-				} else {
-					$index++;
-					$pdf->SetXY($this->postotalht, 259);
-					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
-				}
-
-
-
-
-
+				
 				//$this->_pagefoot($pdf,$object,$outputlangs); /////////////////////////////////// Footer
+
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
 
 				$pdf->Close();
+
+				//$pdf->Output('exenta.pdf', 'I');
 
 				$pdf->Output($file,'F');
 

@@ -394,7 +394,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 
 					// Cantidades de articulos facturados
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY(10, $curY);
+					$pdf->SetXY(7, $curY);
 					
 					if ($this->situationinvoice)
 					{
@@ -414,6 +414,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 					//$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
 					$pdf->SetXY($this->postotalht, $curY);
 					$pdf->MultiCell(25, 3, "$ ".price($object->lines[$i]->multicurrency_total_ttc), 0, 'R', 0); ////// --> Total with tax
+
 
 
 					$sign=1;
@@ -476,6 +477,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 			
 				
 				$pdf->SetFillColor(255,255,255);
+
 				// Si no hay IVA entonces mostrar total solo en la celda de ventas exentas
 				/*if ($vatrate != '0.000') {
 				
@@ -534,33 +536,26 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 				$convertedToLetter = new NumberToLetterConverter();
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
-				$pdf->SetXY(30, 235);
+				$pdf->SetXY(30, 220);
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
-
-				
-
 
 
 				// Calcular el la cantidad que se va a descontar por el IVA
 				if ($vatrate != '0.000') {
-					$pdf->SetXY($this->postotalht, 238);
+					//$pdf->SetXY($this->postotalht, 238);
 					//$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
 				}
+			
+
+				// Sumas
+				$pdf->SetXY($this->postotalht, 216);
+				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 
-
-
-				// Total mostrado en la celda "Total"
-				if ($vatrate != '0.000') {
-					$index++;
-					$pdf->SetXY($this->postotalht, 259);
-					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
-				} else {
-					$index++;
-					$pdf->SetXY($this->postotalht, 259);
-					$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
-				}
-
+				// Total
+				$index++;
+				$pdf->SetXY($this->postotalht, 256);
+				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 				
 				//$this->_pagefoot($pdf,$object,$outputlangs); /////////////////////////////////// Footer
@@ -568,6 +563,8 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
 
 				$pdf->Close();
+
+				//$pdf->Output('temporal.pdf', 'I');
 
 				$pdf->Output($file,'F');
 

@@ -448,24 +448,17 @@ class pdf_factura_exportacion extends ModelePDFFactures
 					$pdf->SetFont('','', $default_font_size - 1);   // On repositionne la police par defaut
 
 
-					// VAT Rate
-					/*if (empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT) && empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT_COLUMN))
-					{
-						$vat_rate = pdf_getlinevatrate($object, $i, $outputlangs, $hidedetails);
-						$pdf->SetXY($this->posxtva, $curY);
-						////$pdf->MultiCell($this->posxup-$this->posxtva-0.8, 3, $vat_rate, 0, 'R');
-					}*/
 
 					// Unit price before discount
 					$up_excl_tax = pdf_getlineupexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->posxtva + 30, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
+					$pdf->SetXY($this->posxtva + 15, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
 					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'R', 0);
 
 					// Quantity
 					//$this->posxqty = 10;
 
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY(10, $curY);
+					$pdf->SetXY(7, $curY);
 					// Enough for 6 chars
 					
 					if ($this->situationinvoice)
@@ -500,25 +493,11 @@ class pdf_factura_exportacion extends ModelePDFFactures
 						}
 					}
 
-					// Unit
-					if($conf->global->PRODUCT_USE_UNITS)
-					{
-						$unit = pdf_getlineunit($object, $i, $outputlangs, $hidedetails, $hookmanager);
-						$pdf->SetXY($this->posxunit, $curY);
-						$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'L');
-					}
-
-					// Discount on line
-					/*if ($object->lines[$i]->remise_percent)
-					{
-            $pdf->SetXY($this->posxdiscount, $curY); 
-					  $remise_percent = pdf_getlineremisepercent($object, $i, $outputlangs, $hidedetails);
-						$pdf->MultiCell($this->postotalht-$this->posxdiscount+2, 3, $remise_percent, 0, 'R');
-					}*/
+					
 
 					// Total HT line
 					$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->postotalht + 4, $curY); // ----------------------------------------------- TOTAL PER UNITS
+					$pdf->SetXY($this->postotalht, $curY); // ----------------------------------------------- TOTAL PER UNITS
 					$pdf->MultiCell(25, 3, "$ ".$total_excl_tax, 0, 'R', 0);
 
 
@@ -569,15 +548,7 @@ class pdf_factura_exportacion extends ModelePDFFactures
 
 					if ($posYAfterImage > $posYAfterDescription) $nexY=$posYAfterImage;
 
-					// Add line
-					/*if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
-					{
-						$pdf->setPage($pageposafter);
-						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(80,80,80)));
-						//$pdf->SetDrawColor(190,190,200);
-						$pdf->line($this->marge_gauche, $nexY+1, $this->page_largeur - $this->marge_droite, $nexY+1);
-						$pdf->SetLineStyle(array('dash'=>0));
-					}*/
+					
 
 					$nexY+=4;    // Passe espace entre les lignes
 
@@ -645,10 +616,8 @@ class pdf_factura_exportacion extends ModelePDFFactures
 				
 				$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
 
-				$pdf->SetXY($this->postotalht + 4, 258); // -------------------------------------------- TOTAL WITHOUT IVA
+				$pdf->SetXY($this->postotalht, 258); // -------------------------------------------- TOTAL WITHOUT IVA
 				$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ht + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
-
-				//$total_ttc = ($conf->multicurrency->enabled && $object->multiccurency_tx != 1) ? $object->multicurrency_total_ttc : $object->total_ttc;
 
 				$thetotal = price($total_ht,0, $outputlangs);
 				
@@ -657,29 +626,16 @@ class pdf_factura_exportacion extends ModelePDFFactures
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
 
-				$pdf->SetXY(30, 250); // ----------------------------------------------------------- TOTAL IN LETTERS
+				$pdf->SetXY(30, 258); // ----------------------------------------------------------- TOTAL IN LETTERS
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
-
-				/*
-				// Calculate the IVA
-				$pdf->SetXY($this->postotalht, 226); // -------------------------------------------- IVA AMOUNT
-				$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
-
-				// Sub total
-				$index++;
-				$pdf->SetXY($this->postotalht, 231); // -------------------------------------------- SUBTOTAL
-				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
-
-				// Total
-				$index++;
-				$pdf->SetXY($this->postotalht, 258); // -------------------------------------------- TOTAL
-				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);*/
 
 
 				//$this->_pagefoot($pdf,$object,$outputlangs); /////////////////////////////////// Footer
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
 
 				$pdf->Close();
+
+				//$pdf->Output("exportacion.pdf",'I');
 
 				$pdf->Output($file,'F');
 
@@ -1500,7 +1456,7 @@ class pdf_factura_exportacion extends ModelePDFFactures
 		$w = 110;
 
 		$posy=$this->marge_haute;
-    $posx=$this->page_largeur-$this->marge_droite-$w;
+    	$posx=$this->page_largeur-$this->marge_droite-$w;
 
 		$pdf->SetXY($this->marge_gauche,$posy);
 

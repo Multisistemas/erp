@@ -85,7 +85,7 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 
 		$this->db = $db;
 		$this->name = "ccf_sin_retencion";
-		$this->description = "Comprobante de crédito fiscal sin retención";
+		$this->description = "Comprobante de crédito fiscal con retención de IVA";
 
 		$this->type = 'pdf';
 		$formatarray=pdf_getFormat();
@@ -279,9 +279,7 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 				    $tplidx = $pdf->importPage(1);
                 }
 
-
-
-        ////////////////////////////////////////////////////////////
+        		////////////////////////////////////////////////////////////
 				$pdf->Open();
 				$pagenb=0;
 				$pdf->SetDrawColor(128,128,128);
@@ -448,26 +446,23 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 					$pdf->SetFont('','', $default_font_size - 1);   // On repositionne la police par defaut
 
 
-					// VAT Rate
-					/*if (empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT) && empty($conf->global->MAIN_GENERATE_DOCUMENTS_WITHOUT_VAT_COLUMN))
-					{
-						$vat_rate = pdf_getlinevatrate($object, $i, $outputlangs, $hidedetails);
-						$pdf->SetXY($this->posxtva, $curY);
-						////$pdf->MultiCell($this->posxup-$this->posxtva-0.8, 3, $vat_rate, 0, 'R');
-					}*/
 
 					// Unit price before discount
 					$up_excl_tax = pdf_getlineupexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->posxtva, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
-					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'C', 0);
+					$pdf->SetXY($this->posxtva + 1, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
+					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'L', 0);
+
+
 
 					// Quantity
 					//$this->posxqty = 10;
 
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY(10, $curY);
+					$pdf->SetXY(7, $curY);
 					// Enough for 6 chars
 					
+
+					///////////////////////////////////////////////// QUANTITY NUMBERS
 					if ($this->situationinvoice)
 					{
 						$pdf->MultiCell($this->posxprogress-$this->posxqty-0.8, 4, $qty, 0, 'C');
@@ -505,13 +500,14 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 					{
 						$unit = pdf_getlineunit($object, $i, $outputlangs, $hidedetails, $hookmanager);
 						$pdf->SetXY($this->posxunit, $curY);
-						$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'L');
+						$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'C');
 					}
 
 					// Discount on line
 					if ($object->lines[$i]->remise_percent)
 					{
-            $pdf->SetXY($this->posxdiscount-2, $curY);
+            		
+            		$pdf->SetXY($this->posxdiscount-2, $curY);
 					  $remise_percent = pdf_getlineremisepercent($object, $i, $outputlangs, $hidedetails);
 						$pdf->MultiCell($this->postotalht-$this->posxdiscount+2, 3, $remise_percent, 0, 'R');
 					}
@@ -568,16 +564,6 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 					$this->tva[$vatrate] += $tvaligne;
 
 					if ($posYAfterImage > $posYAfterDescription) $nexY=$posYAfterImage;
-
-					// Add line
-					/*if (! empty($conf->global->MAIN_PDF_DASH_BETWEEN_LINES) && $i < ($nblignes - 1))
-					{
-						$pdf->setPage($pageposafter);
-						$pdf->SetLineStyle(array('dash'=>'1,1','color'=>array(80,80,80)));
-						//$pdf->SetDrawColor(190,190,200);
-						$pdf->line($this->marge_gauche, $nexY+1, $this->page_largeur - $this->marge_droite, $nexY+1);
-						$pdf->SetLineStyle(array('dash'=>0));
-					}*/
 
 					$nexY+=4;    // Passe espace entre les lignes
 
@@ -640,12 +626,12 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 				///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-				// Total HT
-				$pdf->SetFillColor(255,255,255);
+				// Sumas
+				$pdf->SetFillColor(255,255,252);
 				
 				$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
 
-				$pdf->SetXY($this->postotalht, 220); // -------------------------------------------- TOTAL WITHOUT IVA
+				$pdf->SetXY($this->postotalht, 208); // -------------------------------------------- TOTAL WITHOUT IVA
 				$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ht + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
 
 
@@ -681,22 +667,35 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
 
-				$pdf->SetXY(30, 224); // ----------------------------------------------------------- TOTAL IN LETTERS
+				$pdf->SetXY(30, 214); // ----------------------------------------------------------- TOTAL IN LETTERS
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
 
 				
 				// Calculate the IVA
-				$pdf->SetXY($this->postotalht, 225); // -------------------------------------------- IVA AMOUNT
-				$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
+				$pdf->SetXY($this->postotalht, 216); // -------------------------------------------- IVA AMOUNT
+				//$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
+				$pdf->MultiCell(25, 4, "$ ".price($object->total_tva), $useborder, 'R', 1);
 
 				// Sub total
 				$index++;
-				$pdf->SetXY($this->postotalht, 230); // -------------------------------------------- SUBTOTAL
-				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
+				$pdf->SetXY($this->postotalht, 224); // -------------------------------------------- SUBTOTAL
+				//$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
+				$pdf->MultiCell(25, 4, "$ ".price($total_ht + $object->total_tva), $useborder, 'R', 1);
+
+				// Retention tax
+				/*$retention_tt = 0;
+				if (isset($object->array_options['options_tax_retention']) && !empty($object->array_options['options_tax_retention'])) {
+					$retention_tax = (int)$object->array_options['options_tax_retention'];
+					if ((int)$object->total_ht >= 1) {
+						$retention_tt = ($retention_tax * $object->total_ht)/100;			
+					}
+				}
+				$pdf->SetXY($this->postotalht, 232); // -------------------------------------------- RETENTION TAX
+				$pdf->MultiCell(25, 4, "$ ".price($retention_tt), $useborder, 'R', 1);*/
 
 				// Total
 				$index++;
-				$pdf->SetXY($this->postotalht, 257); // -------------------------------------------- TOTAL
+				$pdf->SetXY($this->postotalht, 255); // -------------------------------------------- TOTAL
 				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 
@@ -704,6 +703,8 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 				if (method_exists($pdf,'AliasNbPages')) $pdf->AliasNbPages();
 
 				$pdf->Close();
+
+				//$pdf->Output('temporal.pdf', 'I');
 
 				$pdf->Output($file,'F');
 
@@ -1357,28 +1358,11 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 		$pdf->SetTextColor(0,0,0);
 		$pdf->SetFont('','', $default_font_size - 2);
 
-		/*if (empty($hidetop))
-		{
-			$titre = $outputlangs->transnoentities("AmountInCurrency",$outputlangs->transnoentitiesnoconv("Currency".$currency));
-			$pdf->SetXY($this->page_largeur - $this->marge_droite - ($pdf->GetStringWidth($titre) + 3), $tab_top-4);
-			$pdf->MultiCell(($pdf->GetStringWidth($titre) + 3), 2, $titre);
-
-			//$conf->global->MAIN_PDF_TITLE_BACKGROUND_COLOR='230,230,230';
-			if (! empty($conf->global->MAIN_PDF_TITLE_BACKGROUND_COLOR)) $pdf->Rect($this->marge_gauche, $tab_top, $this->page_largeur-$this->marge_droite-$this->marge_gauche, 5, 'F', null, explode(',',$conf->global->MAIN_PDF_TITLE_BACKGROUND_COLOR));
-		}*/
-
 		//$pdf->SetDrawColor(0,0,0);
 		$pdf->SetFont('','', $default_font_size - 1);
 
-		// Output Rect
-		//$this->printRect($pdf,$this->marge_gauche, $tab_top, $this->page_largeur-$this->marge_gauche-$this->marge_droite, $tab_height, $hidetop, $hidebottom);	// Rect prend une longueur en 3eme param et 4eme param
-
-
-		if (empty($hidetop)){ //////////////////////
-			//$pdf->line($this->posxtva-1, $tab_top, $this->posxtva-1, $tab_top + $tab_height);	// line prend une position y en 2eme param et 4eme param
-
+		if (empty($hidetop)){
 			$pdf->SetXY(10, $tab_top+1);
-			//$pdf->MultiCell(10,2, $outputlangs->transnoentities("Qty"),'','L'); ////////////////////////////////
 		}
 
 		if (empty($hidetop))
@@ -1524,7 +1508,7 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 		$w = 110;
 
 		$posy=$this->marge_haute;
-    $posx=$this->page_largeur-$this->marge_droite-$w;
+    	$posx=$this->page_largeur-$this->marge_droite-$w;
 
 		$pdf->SetXY($this->marge_gauche,$posy);
 
@@ -1798,7 +1782,6 @@ class pdf_ccf_sin_retencion extends ModelePDFFactures
 
 		$pdf->SetTextColor(0,0,0);*/
 	}
-
 	/**
 	 *   	Show footer of page. Need this->emetteur object
      *
