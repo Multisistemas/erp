@@ -276,7 +276,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 
 
 
-				$tab_top = 90;
+				$tab_top = 70;
 				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)?42:10);
 				$tab_height = 130;
 				$tab_height_newpage = 150;
@@ -388,7 +388,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 					$total_ttc = ($conf->multicurrency->enabled && $object->multiccurency_tx != 1) ? $object->multicurrency_total_ttc : $object->total_ttc;
 
 					// Columna "precio unitario"
-					$pdf->SetXY($this->posxtva, $curY);
+					$pdf->SetXY($this->posxtva + 5, $curY);
 					$pdf->MultiCell(30, 3, "$ ".price($object->lines[$i]->multicurrency_total_ttc), 0, 'R', 0); ////// --> Total with tax
 
 
@@ -536,7 +536,7 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 				$convertedToLetter = new NumberToLetterConverter();
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
-				$pdf->SetXY(30, 220);
+				$pdf->SetXY(30, 235);
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
 
 
@@ -548,13 +548,13 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 			
 
 				// Sumas
-				$pdf->SetXY($this->postotalht, 216);
+				$pdf->SetXY($this->postotalht, 233);
 				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 
 				// Total
 				$index++;
-				$pdf->SetXY($this->postotalht, 256);
+				$pdf->SetXY($this->postotalht, 260);
 				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 				
@@ -641,13 +641,13 @@ class pdf_factura_consumidor_final extends ModelePDFFactures
 		// Imprimir información de la empresa a la que se factura
 		// Nombre
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,38);
+		$pdf->SetXY(30,37);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
 		// Dirección
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,43);
+		$pdf->SetXY(30,42);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 

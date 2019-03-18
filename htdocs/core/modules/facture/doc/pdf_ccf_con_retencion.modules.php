@@ -449,8 +449,8 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 
 					// Unit price before discount
 					$up_excl_tax = pdf_getlineupexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->posxtva + 1, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
-					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'L', 0);
+					$pdf->SetXY($this->posxtva-8, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
+					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'R', 0);
 
 
 
@@ -458,7 +458,7 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 					//$this->posxqty = 10;
 
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY(7, $curY);
+					$pdf->SetXY(5, $curY);
 					// Enough for 6 chars
 					
 
@@ -631,7 +631,7 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 				
 				$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
 
-				$pdf->SetXY($this->postotalht, 208); // -------------------------------------------- TOTAL WITHOUT IVA
+				$pdf->SetXY($this->postotalht, 223); // -------------------------------------------- TOTAL WITHOUT IVA
 				$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ht + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
 
 
@@ -667,35 +667,32 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
 
-				$pdf->SetXY(30, 214); // ----------------------------------------------------------- TOTAL IN LETTERS
+				$pdf->SetXY(30, 225); // ----------------------------------------------------------- TOTAL IN LETTERS
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
 
 				
 				// Calculate the IVA
-				$pdf->SetXY($this->postotalht, 216); // -------------------------------------------- IVA AMOUNT
+				$pdf->SetXY($this->postotalht, 228); // -------------------------------------------- IVA AMOUNT
 				//$pdf->MultiCell(25, 4, "$ ".price($total_ttc - $total_ht), $useborder, 'R', 1);
 				$pdf->MultiCell(25, 4, "$ ".price($object->total_tva), $useborder, 'R', 1);
 
 				// Sub total
 				$index++;
-				$pdf->SetXY($this->postotalht, 224); // -------------------------------------------- SUBTOTAL
+				$pdf->SetXY($this->postotalht, 233); // -------------------------------------------- SUBTOTAL
 				//$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 				$pdf->MultiCell(25, 4, "$ ".price($total_ht + $object->total_tva), $useborder, 'R', 1);
 
 				// Retention tax
 				$retention_tt = 0;
-				if (isset($object->array_options['options_tax_retention']) && !empty($object->array_options['options_tax_retention'])) {
-					$retention_tax = (int)$object->array_options['options_tax_retention'];
-					if ((int)$object->total_ht >= 1) {
-						$retention_tt = ($retention_tax * $object->total_ht)/100;			
-					}
+				if (isset($object->array_options['options_vat_invoice_retention']) && !empty($object->array_options['options_vat_invoice_retention'])) {
+					$retention_tt = $object->array_options['options_vat_invoice_retention'];					
 				}
-				$pdf->SetXY($this->postotalht, 232); // -------------------------------------------- RETENTION TAX
+				$pdf->SetXY($this->postotalht, 245); // -------------------------------------------- RETENTION TAX
 				$pdf->MultiCell(25, 4, "$ ".price($retention_tt), $useborder, 'R', 1);
 
 				// Total
 				$index++;
-				$pdf->SetXY($this->postotalht, 255); // -------------------------------------------- TOTAL
+				$pdf->SetXY($this->postotalht, 260); // -------------------------------------------- TOTAL
 				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 
@@ -1512,39 +1509,6 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 
 		$pdf->SetXY($this->marge_gauche,$posy);
 
-		// Logo
-		/*$logo=$conf->mycompany->dir_output.'/logos/'.$this->emetteur->logo;
-		if ($this->emetteur->logo)
-		{
-			if (is_readable($logo))
-			{
-			    $height=pdf_getHeightForLogo($logo);
-				$pdf->Image($logo, $this->marge_gauche, $posy, 0, $height);	// width=0 (auto)
-			}
-			else
-			{
-				$pdf->SetTextColor(200,0,0);
-				$pdf->SetFont('','B',$default_font_size - 2);
-				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorLogoFileNotFound",$logo), 0, 'L');
-				$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ErrorGoToGlobalSetup"), 0, 'L');
-			}
-		}
-		else
-		{
-			$text=$this->emetteur->name;
-			$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($text), 0, 'L');
-		}*/
-
-		/*$pdf->SetFont('','B', $default_font_size + 3);
-		$pdf->SetXY($posx,$posy);
-		$pdf->SetTextColor(0,0,60);
-		$title=$outputlangs->transnoentities("Invoice");
-		if ($object->type == 1) $title=$outputlangs->transnoentities("InvoiceReplacement");
-		if ($object->type == 2) $title=$outputlangs->transnoentities("InvoiceAvoir");
-		if ($object->type == 3) $title=$outputlangs->transnoentities("InvoiceDeposit");
-		if ($object->type == 4) $title=$outputlangs->transnoentities("InvoiceProFormat");
-		$pdf->MultiCell($w, 3, $title, '', 'R');*/
-
 		$pdf->SetFont('','',$default_font_size);
 		$pdf->SetXY(50,35); // ---------------------------------------------------------- FACTURE NUMBER
 		$pdf->SetTextColor(0,0,0);
@@ -1573,7 +1537,7 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 		}
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,42); // ---------------------------------------------------------- CLIENT FULL NAME
+		$pdf->SetXY(30,41); // ---------------------------------------------------------- CLIENT FULL NAME
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
@@ -1583,204 +1547,25 @@ class pdf_ccf_con_retencion extends ModelePDFFactures
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,56); // ---------------------------------------------------------- CLIENT STATE
+		$pdf->SetXY(30,54); // ---------------------------------------------------------- CLIENT STATE
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->state, '', 'L');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,56); // ---------------------------------------------------------- CLIENT NIT
+		$pdf->SetXY(50,54); // ---------------------------------------------------------- CLIENT NIT
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'C');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(70,56); // ---------------------------------------------------------- CLIENT N.R.C.
+		$pdf->SetXY(70,54); // ---------------------------------------------------------- CLIENT N.R.C.
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof2, '', 'R');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,62); // ---------------------------------------------------------- CLIENT BUSSINESS
+		$pdf->SetXY(50,61); // ---------------------------------------------------------- CLIENT BUSSINESS
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof3, '', 'C');
 
-		/*
-		$posy+=1;
-		$pdf->SetFont('','', $default_font_size - 2);
-
-		if ($object->ref_client)
-		{
-			$posy+=4;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("RefCustomer")." : " . $outputlangs->convToOutputCharset($object->ref_client), '', 'R');
-		}
-
-		$objectidnext=$object->getIdReplacingInvoice('validated');
-		if ($object->type == 0 && $objectidnext)
-		{
-			$objectreplacing=new Facture($this->db);
-			$objectreplacing->fetch($objectidnext);
-
-			$posy+=3;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ReplacementByInvoice").' : '.$outputlangs->convToOutputCharset($objectreplacing->ref), '', 'R');
-		}
-		if ($object->type == 1)
-		{
-			$objectreplaced=new Facture($this->db);
-			$objectreplaced->fetch($object->fk_facture_source);
-
-			$posy+=4;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("ReplacementInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
-		}
-		if ($object->type == 2 && !empty($object->fk_facture_source))
-		{
-			$objectreplaced=new Facture($this->db);
-			$objectreplaced->fetch($object->fk_facture_source);
-
-			$posy+=3;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CorrectionInvoice").' : '.$outputlangs->convToOutputCharset($objectreplaced->ref), '', 'R');
-		}
-
-		$posy+=4;
-		$pdf->SetXY($posx,$posy);
-		$pdf->SetTextColor(0,0,60);
-		$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DateInvoice")." : " . dol_print_date($object->date,"day",false,$outputlangs), '', 'R');
-
-		if (! empty($conf->global->INVOICE_POINTOFTAX_DATE))
-		{
-			$posy+=4;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DatePointOfTax")." : " . dol_print_date($object->date_pointoftax,"day",false,$outputlangs), '', 'R');
-		}
-		
-		if ($object->type != 2)
-		{
-			$posy+=3;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("DateDue")." : " . dol_print_date($object->date_lim_reglement,"day",false,$outputlangs,true), '', 'R');
-		}
-
-		if ($object->thirdparty->code_client)
-		{
-			$posy+=3;
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetTextColor(0,0,60);
-			$pdf->MultiCell($w, 3, $outputlangs->transnoentities("CustomerCode")." : " . $outputlangs->transnoentities($object->thirdparty->code_client), '', 'R');
-		}
-
-		// Get contact
-		if (!empty($conf->global->DOC_SHOW_FIRST_SALES_REP))
-		{
-		    $arrayidcontact=$object->getIdContact('internal','SALESREPFOLL');
-		    if (count($arrayidcontact) > 0)
-		    {
-		        $usertmp=new User($this->db);
-		        $usertmp->fetch($arrayidcontact[0]);
-                $posy+=4;
-                $pdf->SetXY($posx,$posy);
-		        $pdf->SetTextColor(0,0,60);
-		        $pdf->MultiCell($w, 3, $langs->trans("SalesRepresentative")." : ".$usertmp->getFullName($langs), '', 'R');
-		    }
-		}
-		
-		$posy+=1;
-
-		// Show list of linked objects
-		$posy = pdf_writeLinkedObjects($pdf, $object, $outputlangs, $posx, $posy, $w, 3, 'R', $default_font_size);
-
-		if ($showaddress)
-		{
-			// Sender properties
-			$carac_emetteur = pdf_build_address($outputlangs, $this->emetteur, $object->thirdparty);
-
-			// Show sender
-			$posy=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 40 : 42;
-			$posx=$this->marge_gauche;
-			if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->page_largeur-$this->marge_droite-80;
-
-			$hautcadre=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 38 : 40;
-			$widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 82;
-
-
-			// Show sender frame
-			$pdf->SetTextColor(0,0,0);
-			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->SetXY($posx,$posy-5);
-			$pdf->MultiCell(66,5, $outputlangs->transnoentities("BillFrom").":", 0, 'L');
-			$pdf->SetXY($posx,$posy);
-			$pdf->SetFillColor(230,230,230);
-			$pdf->MultiCell($widthrecbox, $hautcadre, "", 0, 'R', 1);
-			$pdf->SetTextColor(0,0,60);
-
-			// Show sender name
-			$pdf->SetXY($posx+2,$posy+3);
-			$pdf->SetFont('','B', $default_font_size);
-			$pdf->MultiCell($widthrecbox-2, 4, $outputlangs->convToOutputCharset($this->emetteur->name), 0, 'L');
-			$posy=$pdf->getY();
-
-			// Show sender information
-			$pdf->SetXY($posx+2,$posy);
-			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->MultiCell($widthrecbox-2, 4, $carac_emetteur, 0, 'L');
-
-
-
-			// If BILLING contact defined on invoice, we use it
-			$usecontact=false;
-			$arrayidcontact=$object->getIdContact('external','BILLING');
-			if (count($arrayidcontact) > 0)
-			{
-				$usecontact=true;
-				$result=$object->fetch_contact($arrayidcontact[0]);
-			}
-
-			//Recipient name
-			// On peut utiliser le nom de la societe du contact
-			if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
-				$thirdparty = $object->contact;
-			} else {
-				$thirdparty = $object->thirdparty;
-			}
-
-			$carac_client_name= pdfBuildThirdpartyName($thirdparty, $outputlangs);
-
-			$carac_client=pdf_build_address($outputlangs,$this->emetteur,$object->thirdparty,($usecontact?$object->contact:''),$usecontact,'target',$object);
-
-			// Show recipient
-			$widthrecbox=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 92 : 100;
-			if ($this->page_largeur < 210) $widthrecbox=84;	// To work with US executive format
-			$posy=!empty($conf->global->MAIN_PDF_USE_ISO_LOCATION) ? 40 : 42;
-			$posx=$this->page_largeur-$this->marge_droite-$widthrecbox;
-			if (! empty($conf->global->MAIN_INVERT_SENDER_RECIPIENT)) $posx=$this->marge_gauche;
-
-			// Show recipient frame
-			$pdf->SetTextColor(0,0,0);
-			$pdf->SetFont('','', $default_font_size - 2);
-			$pdf->SetXY($posx+2,$posy-5);
-			$pdf->MultiCell($widthrecbox, 5, $outputlangs->transnoentities("BillTo").":",0,'L');
-			$pdf->Rect($posx, $posy, $widthrecbox, $hautcadre);
-
-			// Show recipient name
-			$pdf->SetXY($posx+2,$posy+3);
-			$pdf->SetFont('','B', $default_font_size);
-			$pdf->MultiCell($widthrecbox, 2, $carac_client_name, 0, 'L');
-
-			$posy = $pdf->getY();
-
-			// Show recipient information
-			$pdf->SetFont('','', $default_font_size - 1);
-			$pdf->SetXY($posx+2,$posy);
-			$pdf->MultiCell($widthrecbox, 4, $carac_client, 0, 'L');
-		}
-
-		$pdf->SetTextColor(0,0,0);*/
 	}
 
 	/**

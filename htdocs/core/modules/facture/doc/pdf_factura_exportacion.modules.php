@@ -451,7 +451,7 @@ class pdf_factura_exportacion extends ModelePDFFactures
 
 					// Unit price before discount
 					$up_excl_tax = pdf_getlineupexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->posxtva + 15, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
+					$pdf->SetXY($this->posxtva + 28, $curY); // ----------------------------------- UNIT PRICE /////////////////////////////
 					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'R', 0);
 
 					// Quantity
@@ -497,7 +497,7 @@ class pdf_factura_exportacion extends ModelePDFFactures
 
 					// Total HT line
 					$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->postotalht, $curY); // ----------------------------------------------- TOTAL PER UNITS
+					$pdf->SetXY($this->postotalht + 4, $curY); // ----------------------------------------------- TOTAL PER UNITS
 					$pdf->MultiCell(25, 3, "$ ".$total_excl_tax, 0, 'R', 0);
 
 
@@ -616,7 +616,7 @@ class pdf_factura_exportacion extends ModelePDFFactures
 				
 				$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
 
-				$pdf->SetXY($this->postotalht, 258); // -------------------------------------------- TOTAL WITHOUT IVA
+				$pdf->SetXY($this->postotalht + 4, 258); // -------------------------------------------- TOTAL WITHOUT IVA
 				$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ht + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
 
 				$thetotal = price($total_ht,0, $outputlangs);
@@ -1466,7 +1466,7 @@ class pdf_factura_exportacion extends ModelePDFFactures
 		$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($object->ref), '', 'C');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(70,42); // ---------------------------------------------------------- FACTURE EXPEDITION DATE
+		$pdf->SetXY(75,46); // ---------------------------------------------------------- FACTURE EXPEDITION DATE
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'R');
 
@@ -1488,12 +1488,12 @@ class pdf_factura_exportacion extends ModelePDFFactures
 		}
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,42); // ---------------------------------------------------------- CLIENT FULL NAME
+		$pdf->SetXY(30,46); // ---------------------------------------------------------- CLIENT FULL NAME
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(120, 4, (string)$thirdparty->nom, '', 'L');
 
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,48); // ---------------------------------------------------------- CLIENT FULL ADDRESS
+		$pdf->SetXY(30,55); // ---------------------------------------------------------- CLIENT FULL ADDRESS
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(120, 4, (string)$thirdparty->address, '', 'L');
 

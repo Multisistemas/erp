@@ -2027,6 +2027,32 @@ if (empty($reshook))
 			$action = 'edit_extras';
 	}
 
+
+	/**
+	 * Update vat retention
+	 */
+	if ($action == 'update_vat_invoice_retention') {
+		$object->oldcopy = dol_clone($object);
+		
+		////////////////////////
+		$percent = $_POST['options_vat_retention'];
+
+		$object->array_options['options_vat_retention'] = $percent;
+		$object->updateExtraField('vat_retention');
+					
+		// Calculate 10% percent
+		$vat = ((float)$percent * (float)$object->total_ht) / 100;		
+
+		// Update invoice extrafield
+		$object->array_options['options_vat_invoice_retention'] = price2num($vat);		
+		$object->updateExtraField('vat_invoice_retention');
+
+		unset($_POST['options_vat_retention']);
+		$object->update_price(0, 'auto');
+		
+	}
+
+
 	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
 
 	if (! empty($conf->global->MAIN_DISABLE_CONTACTS_TAB) && $user->rights->facture->creer) {
@@ -2093,6 +2119,31 @@ $title = $langs->trans('InvoiceCustomer') . " - " . $langs->trans('Card');
 $helpurl = "EN:Customers_Invoices|FR:Factures_Clients|ES:Facturas_a_clientes";
 llxHeader('', $title, $helpurl);
 
+echo '<style type="text/css">
+	.hidden-field {
+		display: none;
+	}
+
+	#facture_extras_vat_retention, #facture_extras_vat_invoice_retention {
+		display: none;
+	}
+
+	td.evenodd, tr.nohoverpair td {
+		background:#efefef !important;
+	}
+
+	td.extrafield-background {
+		background:#efefef;
+	}
+
+	tr.pair > td {
+		background:#efefef;
+	}
+
+	tr#trlinefordates > td {
+		background:#efefef;	
+	}
+</style>';
 
 // Mode creation
 
@@ -3602,6 +3653,19 @@ else if ($id > 0 || ! empty($ref))
 	print '<tr><td>' . $langs->trans('AmountVAT') . '</td><td colspan="3" class="nowrap amountcard">' . price($object->total_tva, 1, '', 1, - 1, - 1, $conf->currency) . '</td></tr>';
 	print '</tr>';
 
+	// Print taxes /////////////////////////////////////////////////////////////////////////
+	if (!empty($object->array_options)) {
+		foreach ($object->array_options as $key => $value) {
+			if ($key == 'options_vat_invoice_retention') {
+				if ($value != null && (float)$value > 0) {
+					print '<tr><td>' . $extralabels['vat_invoice_retention'] .'</td><td colspan="3" class="nowrap amountcard">' . price($value, 1, '', 1, - 1, - 1, $conf->currency) . '</td></tr>';
+					print '</tr>';
+				}
+			}
+		}
+	}
+	// Ends Print taxes /////////////////////////////////////////////////////////////////////////	
+
 	// Amount Local Taxes
 	if (($mysoc->localtax1_assuj == "1" && $mysoc->useLocalTax(1)) || $object->total_localtax1 != 0) 	// Localtax1
 	{
@@ -4085,6 +4149,54 @@ else if ($id > 0 || ! empty($ref))
     print "</div>";
 
 	print "</form>\n";
+
+	// RETENTION FOR GREAT TAXPAYERS
+	// var_dump($object);
+	// $object->statut => invoice status
+	// 0 = draft
+	// 1 = payment pending
+	// 2 = paid
+	// 3 = abandoned
+
+	if (isset($soc->typent_code) && $soc->typent_code == 'TE_GROUP') {
+		print "<br>";
+		print '	<form name="update_vat_invoice_retention" id="update_vat_invoice_retention" action="' . $_SERVER["PHP_SELF"] .'" method="POST">
+			<input type="hidden" name="token" value="' . $_SESSION ['newtoken'] . '">
+			<input type="hidden" name="action" value="update_vat_invoice_retention">
+			<input type="hidden" name="attribute" value="vat_retention">
+			<input type="hidden" name="mode" value="">
+			<input type="hidden" name="id" value="' . $object->id . '">';
+
+		print '<div class="div-table-responsive-no-min">';
+		print '<table id="tablelines" class="noborder noshadow" width="100%">';
+
+
+		print '<tr class="liste_titre nodrag nodrop">';
+		
+		// Description
+		print '<td class="">IVA Retenido (%)</td>';
+
+		$disabled = ((int)$object->statut) ? "disabled" : "";
+		$vat_invoice_retention = (isset($object->array_options['options_vat_retention'])) ? (float)$object->array_options['options_vat_retention'] : "";
+		// Input
+		print '<td class="" align="center">
+				<input class="flat right" type="number" name="options_vat_retention" min="0" step=".01" maxlength="" '.$disabled.' value="'.$vat_invoice_retention.'" />
+			</td>';
+		
+		// Simbol
+		print '<td class="" align="left"><span>%</span></td>';
+
+		// Button
+		print '<td class="center" align="center" valign="middle">';
+		if (!(int)$object->statut) {
+			print '<input type="submit" class="button" id="" name="save" value="'.$langs->trans("Save").'"/>';	
+		}
+		print '</td>';
+
+		print "</table>\n";
+		print "</div>";
+		print "</form>\n";
+	}
 
 	dol_fiche_end();
 

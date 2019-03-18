@@ -2403,6 +2403,36 @@ abstract class CommonObject
 
             $this->db->free($resql);
 
+            // taxes ///////////////////////////////////////////////////////////////////////////
+			$tax_subtract = 0;
+			$tax_plus = 0;
+			if (!empty($this->array_options)) {
+				foreach ($this->array_options as $key => $value) {
+					if ($key == 'options_vat_invoice_retention') {
+						if ($value != null) {
+							$tax_subtract += (float)$value;	
+						}						
+					}
+					
+				}
+			}
+			///////////////////////////////////////////////////////////////////////////////////////
+
+			// Just to avoid errors
+			if ($tax_subtract <= 0) {
+				$tax_subtract = 0;
+			}
+
+			if ($tax_plus <= 0) {
+				$tax_plus = 0;
+			}
+
+			// Subtract taxes
+			$this->total_ttc = $this->total_ttc - $tax_subtract;
+
+			// Add specific taxes
+			$this->total_ttc = $this->total_ttc + $tax_plus;
+
             // Now update global field total_ht, total_ttc and tva
             $fieldht='total_ht';
             $fieldtva='tva';

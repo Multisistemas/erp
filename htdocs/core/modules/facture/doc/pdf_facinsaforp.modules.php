@@ -85,7 +85,7 @@ class pdf_facinsaforp extends ModelePDFFactures
 		$langs->load("bills");
 
 		$this->db = $db;
-		$this->name = "facinsaforp";
+		$this->name = "factura_insaforp";
 		$this->description = "FAC INSAFORP - Multisis Template";
 
 		$this->type = 'pdf';
@@ -342,7 +342,7 @@ class pdf_facinsaforp extends ModelePDFFactures
 				//$pdf->MultiCell(0, 3, '');		// Set interline to 3
 				$pdf->SetTextColor(0,0,0);
 
-				$tab_top = 90;
+				$tab_top = 70;
 				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)?42:10);
 				$tab_height = 130;
 				$tab_height_newpage = 150;
@@ -515,14 +515,15 @@ class pdf_facinsaforp extends ModelePDFFactures
 
 					// Unit price before discount
 					$up_excl_tax = pdf_getlineupexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->posxtva-3, $curY);
-					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'C', 0);
+					$pdf->SetXY($this->posxtva - 8, $curY);
+					$pdf->MultiCell(30, 3, "$ ".$up_excl_tax, 0, 'R', 0);
+					//$pdf->MultiCell(30, 3, "$ ".price($object->lines[$i]->multicurrency_total_ttc), 0, 'R', 0); ////// --> Total with tax
 
 					// Quantity
 					//$this->posxqty = 10;
 
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY(10, $curY);
+					$pdf->SetXY(8, $curY);
 					// Enough for 6 chars
 					
 					if ($this->situationinvoice)
@@ -562,14 +563,14 @@ class pdf_facinsaforp extends ModelePDFFactures
 					{
 						$unit = pdf_getlineunit($object, $i, $outputlangs, $hidedetails, $hookmanager);
 						$pdf->SetXY($this->posxunit, $curY);
-						$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'L');
+						//$pdf->MultiCell($this->posxdiscount-$this->posxunit-0.8, 4, $unit, 0, 'L');
 					}
 
 					// Discount on line
 					if ($object->lines[$i]->remise_percent)
 					{
-            $pdf->SetXY($this->posxdiscount-2, $curY);
-					  $remise_percent = pdf_getlineremisepercent($object, $i, $outputlangs, $hidedetails);
+            			$pdf->SetXY($this->posxdiscount-2, $curY);
+					  	$remise_percent = pdf_getlineremisepercent($object, $i, $outputlangs, $hidedetails);
 						$pdf->MultiCell($this->postotalht-$this->posxdiscount+2, 3, $remise_percent, 0, 'R');
 					}
 
@@ -1566,65 +1567,49 @@ class pdf_facinsaforp extends ModelePDFFactures
 
 		pdf_pagehead($pdf,$outputlangs,$this->page_hauteur);
 
-		// Show Draft Watermark
-		if($object->statut==0 && (! empty($conf->global->FACTURE_DRAFT_WATERMARK)) )
-        {
-		      pdf_watermark($pdf,$outputlangs,$this->page_hauteur,$this->page_largeur,'mm',$conf->global->FACTURE_DRAFT_WATERMARK);
-        }
-
-		$pdf->SetTextColor(0,0,60);
-		$pdf->SetFont('','B', $default_font_size + 3);
-
 		$w = 110;
 
 		$posy=$this->marge_haute;
-    $posx=$this->page_largeur-$this->marge_droite-$w;
+    	$posx=$this->page_largeur-$this->marge_droite-$w;
 
-		$pdf->SetXY($this->marge_gauche,$posy);
-
+    	// Imprimir número de factura en el erp
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,31);
+		$pdf->SetXY(50,32);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($object->ref), '', 'C');
 
+		// Imprimir fecha en que se facturó
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(70,31);
+		$pdf->SetXY(120,33);
 		$pdf->SetTextColor(0,0,0);
-		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'R');
+		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'C');
 
-
-		// If BILLING contact defined on invoice, we use it
-		$usecontact=false;
-		$arrayidcontact=$object->getIdContact('external','BILLING');
-		if (count($arrayidcontact) > 0){
-			$usecontact=true;
-			$result=$object->fetch_contact($arrayidcontact[0]);
-		}
-
-		//Recipient name
-		// On peut utiliser le nom de la societe du contact
+		// Obtener la empresa a la que se factura
 		if ($usecontact && !empty($conf->global->MAIN_USE_COMPANY_NAME_OF_CONTACT)) {
 			$thirdparty = $object->contact;
 		} else {
 			$thirdparty = $object->thirdparty;
 		}
 
+		// Imprimir información de la empresa a la que se factura
+		// Nombre
 		$pdf->SetFont('','',$default_font_size);
 		$pdf->SetXY(30,37);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
+		// Dirección
 		$pdf->SetFont('','',$default_font_size);
 		$pdf->SetXY(30,42);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 
+		// DUI/NIT
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,48);
+		$pdf->SetXY(95,49);
 		$pdf->SetTextColor(0,0,0);
-		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'C');
+		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'L');
 
-		
 	}
 
 	/**
