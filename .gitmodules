@@ -1,0 +1,9 @@
+[submodule "htdocs/plugins/budget"]
+	path = htdocs/plugins/budget
+	url = git@github.com:Multisistemas/dolibarr_module_budget.git
+[submodule "htdocs/plugins/abricot"]
+	path = htdocs/plugins/abricot
+	url = git@github.com:Multisistemas/dolibarr_module_abricot.git
+[submodule "htdocs/plugins/sig"]
+	path = htdocs/plugins/sig
+	url = git@github.com:Multisistemas/dolibarr_module_sig.git
