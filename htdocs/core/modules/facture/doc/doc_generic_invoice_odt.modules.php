@@ -46,14 +46,14 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 	public $emetteur;
 
 	/**
-     * @var array Minimum version of PHP required by module.
-     * e.g.: PHP ≥ 5.5 = array(5, 5)
-     */
-	public $phpmin = array(5, 5);
+   * @var array() Minimum version of PHP required by module.
+	 * e.g.: PHP ≥ 5.4 = array(5, 4)
+   */
+	public $phpmin = array(5, 4);
 
 	/**
      * Dolibarr version of the loaded document
-     * @var string
+     * @public string
      */
 	public $version = 'dolibarr';
 
@@ -63,8 +63,8 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 	 *
 	 *  @param		DoliDB		$db      Database handler
 	 */
-    public function __construct($db)
-    {
+	function __construct($db)
+	{
 		global $conf, $langs, $mysoc;
 
 		// Load translation files required by the page
@@ -108,8 +108,8 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 	 * @param	Translate	$langs      Lang object to use for output
 	 * @return	string      			Description
 	 */
-    public function info($langs)
-    {
+	function info($langs)
+	{
 		global $conf, $langs;
 
 		// Load translation files required by the page
@@ -190,7 +190,7 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		return $texte;
     }
 
-    // phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
+    // phpcs:disable PEAR.NamingConventions.ValidFunctionName.NotCamelCaps
 	/**
 	 *  Function to build a document on disk using the generic odt module.
 	 *
@@ -202,8 +202,8 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 	 *  @param		int			$hideref			Do not show ref
 	 *	@return		int         					1 if OK, <=0 if KO
 	 */
-    public function write_file($object, $outputlangs, $srctemplatepath, $hidedetails = 0, $hidedesc = 0, $hideref = 0)
-    {
+	function write_file($object,$outputlangs,$srctemplatepath,$hidedetails=0,$hidedesc=0,$hideref=0)
+	{
         // phpcs:enable
 		global $user,$langs,$conf,$mysoc,$hookmanager;
 
@@ -379,17 +379,17 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 				// Define substitution array
 				$substitutionarray = getCommonSubstitutionArray($outputlangs, 0, null, $object);
 				$array_object_from_properties=$this->get_substitutionarray_each_var_object($object, $outputlangs);
-				$array_objet=$this->get_substitutionarray_object($object, $outputlangs);
-				$array_user=$this->get_substitutionarray_user($user, $outputlangs);
-				$array_soc=$this->get_substitutionarray_mysoc($mysoc, $outputlangs);
-				$array_thirdparty=$this->get_substitutionarray_thirdparty($socobject, $outputlangs);
-				$array_propal=is_object($propal_object)?$this->get_substitutionarray_object($propal_object, $outputlangs, 'propal'):array();
+				$array_objet=$this->get_substitutionarray_object($object,$outputlangs);
+				$array_user=$this->get_substitutionarray_user($user,$outputlangs);
+				$array_soc=$this->get_substitutionarray_mysoc($mysoc,$outputlangs);
+				$array_thirdparty=$this->get_substitutionarray_thirdparty($socobject,$outputlangs);
+				$array_propal=is_object($propal_object)?$this->get_substitutionarray_object($propal_object,$outputlangs,'propal'):array();
 				$array_other=$this->get_substitutionarray_other($outputlangs);
 				// retrieve contact information for use in object as contact_xxx tags
 				$array_thirdparty_contact = array();
-				if ($usecontact && is_object($contactobject)) $array_thirdparty_contact=$this->get_substitutionarray_contact($contactobject, $outputlangs, 'contact');
+				if ($usecontact && is_object($contactobject)) $array_thirdparty_contact=$this->get_substitutionarray_contact($contactobject,$outputlangs,'contact');
 
-				$tmparray = array_merge($substitutionarray, $array_object_from_properties, $array_user, $array_soc, $array_thirdparty, $array_objet, $array_propal, $array_other, $array_thirdparty_contact);
+				$tmparray = array_merge($substitutionarray,$array_object_from_properties,$array_user,$array_soc,$array_thirdparty,$array_objet,$array_propal,$array_other,$array_thirdparty_contact);
 				complete_substitutions_array($tmparray, $outputlangs, $object);
 
 				// Call the ODTSubstitution hook
@@ -433,11 +433,11 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 					{
 						foreach ($object->lines as $line)
 						{
-							$tmparray=$this->get_substitutionarray_lines($line, $outputlangs);
+							$tmparray=$this->get_substitutionarray_lines($line,$outputlangs);
 							complete_substitutions_array($tmparray, $outputlangs, $object, $line, "completesubstitutionarray_lines");
 							// Call the ODTSubstitutionLine hook
 							$parameters=array('odfHandler'=>&$odfHandler,'file'=>$file,'object'=>$object,'outputlangs'=>$outputlangs,'substitutionarray'=>&$tmparray,'line'=>$line);
-							$reshook=$hookmanager->executeHooks('ODTSubstitutionLine', $parameters, $this, $action);    // Note that $action and $object may have been modified by some hooks
+							$reshook=$hookmanager->executeHooks('ODTSubstitutionLine',$parameters,$this,$action);    // Note that $action and $object may have been modified by some hooks
 							foreach($tmparray as $key => $val)
 							{
 								try
@@ -521,5 +521,5 @@ class doc_generic_invoice_odt extends ModelePDFFactures
 		}
 
 		return -1;
-    }
+	}
 }

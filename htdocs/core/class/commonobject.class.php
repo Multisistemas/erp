@@ -1,6 +1,8 @@
 <?php
 /* Copyright (C) 2006-2015 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@inodbox.com>
+ * Copyright (C) 2005-2013 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2010-2013 Juanjo Menent        <jmenent@2byte.es>
+ * Copyright (C) 2012      Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2010-2015 Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2012-2013 Christophe Battarel  <christophe.battarel@altairis.fr>
  * Copyright (C) 2011-2019 Philippe Grand       <philippe.grand@atoo-net.com>
@@ -2915,370 +2917,384 @@ abstract class CommonObject
 				}
 			}
 
-			$this->db->free($resql);
+            $this->db->free($resql);
 
-			// Now update global field total_ht, total_ttc and tva
-			$fieldht='total_ht';
-			$fieldtva='tva';
-			$fieldlocaltax1='localtax1';
-			$fieldlocaltax2='localtax2';
-			$fieldttc='total_ttc';
-			// Specific code for backward compatibility with old field names
-			if ($this->element == 'facture' || $this->element == 'facturerec')             $fieldht='total';
-			if ($this->element == 'facture_fourn' || $this->element == 'invoice_supplier') $fieldtva='total_tva';
-			if ($this->element == 'propal')                                                $fieldttc='total';
-			if ($this->element == 'expensereport')                                         $fieldtva='total_tva';
-			if ($this->element == 'supplier_proposal')                                     $fieldttc='total';
-
-			if (empty($nodatabaseupdate))
-			{
-				$sql = 'UPDATE '.MAIN_DB_PREFIX.$this->table_element.' SET';
-				$sql .= " ".$fieldht."='".price2num($this->total_ht)."',";
-				$sql .= " ".$fieldtva."='".price2num($this->total_tva)."',";
-				$sql .= " ".$fieldlocaltax1."='".price2num($this->total_localtax1)."',";
-				$sql .= " ".$fieldlocaltax2."='".price2num($this->total_localtax2)."',";
-				$sql .= " ".$fieldttc."='".price2num($this->total_ttc)."'";
-						$sql .= ", multicurrency_total_ht='".price2num($this->multicurrency_total_ht, 'MT', 1)."'";
-						$sql .= ", multicurrency_total_tva='".price2num($this->multicurrency_total_tva, 'MT', 1)."'";
-						$sql .= ", multicurrency_total_ttc='".price2num($this->multicurrency_total_ttc, 'MT', 1)."'";
-				$sql .= ' WHERE rowid = '.$this->id;
-
-
-				dol_syslog(get_class($this)."::update_price", LOG_DEBUG);
-				$resql=$this->db->query($sql);
-				if (! $resql)
-				{
-					$error++;
-					$this->error=$this->db->lasterror();
-					$this->errors[]=$this->db->lasterror();
+            // taxes ///////////////////////////////////////////////////////////////////////////
+			$tax_subtract = 0;
+			$tax_plus = 0;
+			if (!empty($this->array_options)) {
+				foreach ($this->array_options as $key => $value) {
+					if ($key == 'options_vat_invoice_retention') {
+						if ($value != null) {
+							$tax_subtract += (float)$value;	
+						}						
+					}
+					
 				}
 			}
+			///////////////////////////////////////////////////////////////////////////////////////
 
-			if (! $error)
-			{
-				return 1;
+			// Just to avoid errors
+			if ($tax_subtract <= 0) {
+				$tax_subtract = 0;
 			}
-			else
-			{
-				return -1;
+
+			if ($tax_plus <= 0) {
+				$tax_plus = 0;
 			}
-		}
-		else
-		{
-			dol_print_error($this->db, 'Bad request in update_price');
-			return -1;
-		}
-	}
 
-	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
-	/**
-	 *	Add objects linked in llx_element_element.
-	 *
-	 *	@param		string	$origin		Linked element type
-	 *	@param		int		$origin_id	Linked element id
-	 *	@return		int					<=0 if KO, >0 if OK
-	 *	@see		fetchObjectLinked(), updateObjectLinked(), deleteObjectLinked()
-	 */
-	public function add_object_linked($origin = null, $origin_id = null)
-	{
-		// phpcs:enable
-		$origin = (! empty($origin) ? $origin : $this->origin);
-		$origin_id = (! empty($origin_id) ? $origin_id : $this->origin_id);
+			// Subtract taxes
+			$this->total_ttc = $this->total_ttc - $tax_subtract;
 
-		// Special case
-		if ($origin == 'order') $origin='commande';
-		if ($origin == 'invoice') $origin='facture';
-		if ($origin == 'invoice_template') $origin='facturerec';
-		if ($origin == 'supplierorder') $origin='order_supplier';
-		$this->db->begin();
+			// Add specific taxes
+			$this->total_ttc = $this->total_ttc + $tax_plus;
 
-		$sql = "INSERT INTO ".MAIN_DB_PREFIX."element_element (";
-		$sql.= "fk_source";
-		$sql.= ", sourcetype";
-		$sql.= ", fk_target";
-		$sql.= ", targettype";
-		$sql.= ") VALUES (";
-		$sql.= $origin_id;
-		$sql.= ", '".$this->db->escape($origin)."'";
-		$sql.= ", ".$this->id;
-		$sql.= ", '".$this->db->escape($this->element)."'";
-		$sql.= ")";
+            // Now update global field total_ht, total_ttc and tva
+            $fieldht='total_ht';
+            $fieldtva='tva';
+            $fieldlocaltax1='localtax1';
+            $fieldlocaltax2='localtax2';
+            $fieldttc='total_ttc';
+            // Specific code for backward compatibility with old field names
+            if ($this->element == 'facture' || $this->element == 'facturerec')             $fieldht='total';
+            if ($this->element == 'facture_fourn' || $this->element == 'invoice_supplier') $fieldtva='total_tva';
+            if ($this->element == 'propal')                                                $fieldttc='total';
+            if ($this->element == 'expensereport')                                         $fieldtva='total_tva';
+            if ($this->element == 'supplier_proposal')                                     $fieldttc='total';
 
-		dol_syslog(get_class($this)."::add_object_linked", LOG_DEBUG);
+            if (empty($nodatabaseupdate))
+            {
+                $sql = 'UPDATE '.MAIN_DB_PREFIX.$this->table_element.' SET';
+                $sql .= " ".$fieldht."='".price2num($this->total_ht)."',";
+                $sql .= " ".$fieldtva."='".price2num($this->total_tva)."',";
+                $sql .= " ".$fieldlocaltax1."='".price2num($this->total_localtax1)."',";
+                $sql .= " ".$fieldlocaltax2."='".price2num($this->total_localtax2)."',";
+                $sql .= " ".$fieldttc."='".price2num($this->total_ttc)."'";
+				$sql .= ", multicurrency_total_ht='".price2num($this->multicurrency_total_ht, 'MT', 1)."'";
+				$sql .= ", multicurrency_total_tva='".price2num($this->multicurrency_total_tva, 'MT', 1)."'";
+				$sql .= ", multicurrency_total_ttc='".price2num($this->multicurrency_total_ttc, 'MT', 1)."'";
+                $sql .= ' WHERE rowid = '.$this->id;
+
+                //print "xx".$sql;
+                dol_syslog(get_class($this)."::update_price", LOG_DEBUG);
+                $resql=$this->db->query($sql);
+                if (! $resql)
+                {
+                    $error++;
+                    $this->error=$this->db->lasterror();
+                    $this->errors[]=$this->db->lasterror();
+                }
+            }
+
+            if (! $error)
+            {
+                return 1;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+        else
+        {
+            dol_print_error($this->db,'Bad request in update_price');
+            return -1;
+        }
+    }
+
+    /**
+     *	Add objects linked in llx_element_element.
+     *
+     *	@param		string	$origin		Linked element type
+     *	@param		int		$origin_id	Linked element id
+     *	@return		int					<=0 if KO, >0 if OK
+     *	@see		fetchObjectLinked, updateObjectLinked, deleteObjectLinked
+     */
+    function add_object_linked($origin=null, $origin_id=null)
+    {
+    	$origin = (! empty($origin) ? $origin : $this->origin);
+    	$origin_id = (! empty($origin_id) ? $origin_id : $this->origin_id);
+
+    	// Special case
+    	if ($origin == 'order') $origin='commande';
+    	if ($origin == 'invoice') $origin='facture';
+
+        $this->db->begin();
+
+        $sql = "INSERT INTO ".MAIN_DB_PREFIX."element_element (";
+        $sql.= "fk_source";
+        $sql.= ", sourcetype";
+        $sql.= ", fk_target";
+        $sql.= ", targettype";
+        $sql.= ") VALUES (";
+        $sql.= $origin_id;
+        $sql.= ", '".$origin."'";
+        $sql.= ", ".$this->id;
+        $sql.= ", '".$this->element."'";
+        $sql.= ")";
+
+        dol_syslog(get_class($this)."::add_object_linked", LOG_DEBUG);
 		if ($this->db->query($sql))
-		{
-			$this->db->commit();
-			return 1;
-		}
-		else
-		{
-			$this->error=$this->db->lasterror();
-			$this->db->rollback();
-			return 0;
-		}
+	  	{
+	  		$this->db->commit();
+	  		return 1;
+	  	}
+	  	else
+	  	{
+	  		$this->error=$this->db->lasterror();
+	  		$this->db->rollback();
+	  		return 0;
+	  	}
 	}
 
-	/**
-	 *	Fetch array of objects linked to current object (object of enabled modules only). Links are loaded into
-	 *		this->linkedObjectsIds array and
-	 *		this->linkedObjects array if $loadalsoobjects = 1
-	 *  Possible usage for parameters:
-	 *  - all parameters empty -> we look all link to current object (current object can be source or target)
-	 *  - source id+type -> will get target list linked to source
-	 *  - target id+type -> will get source list linked to target
-	 *  - source id+type + target type -> will get target list of the type
-	 *  - target id+type + target source -> will get source list of the type
-	 *
-	 *	@param	int		$sourceid			Object source id (if not defined, id of object)
-	 *	@param  string	$sourcetype			Object source type (if not defined, element name of object)
-	 *	@param  int		$targetid			Object target id (if not defined, id of object)
-	 *	@param  string	$targettype			Object target type (if not defined, elemennt name of object)
-	 *	@param  string	$clause				'OR' or 'AND' clause used when both source id and target id are provided
-	 *  @param  int		$alsosametype		0=Return only links to object that differs from source type. 1=Include also link to objects of same type.
-	 *  @param  string	$orderby			SQL 'ORDER BY' clause
-	 *  @param	int		$loadalsoobjects	Load also array this->linkedObjects (Use 0 to increase performances)
-	 *	@return int							<0 if KO, >0 if OK
-	 *  @see	add_object_linked(), updateObjectLinked(), deleteObjectLinked()
-	 */
-	public function fetchObjectLinked($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '', $clause = 'OR', $alsosametype = 1, $orderby = 'sourcetype', $loadalsoobjects = 1)
-	{
-		global $conf;
+    /**
+     *	Fetch array of objects linked to current object. Links are loaded into this->linkedObjects array and this->linkedObjectsIds
+     *  Possible usage for parameters:
+     *  - all parameters empty -> we look all link to current object (current object can be source or target)
+     *  - source id+type -> will get target list linked to source
+     *  - target id+type -> will get source list linked to target
+     *  - source id+type + target type -> will get target list of the type
+     *  - target id+type + target source -> will get source list of the type
+     *
+     *	@param	int		$sourceid		Object source id (if not defined, id of object)
+     *	@param  string	$sourcetype		Object source type (if not defined, element name of object)
+     *	@param  int		$targetid		Object target id (if not defined, id of object)
+     *	@param  string	$targettype		Object target type (if not defined, elemennt name of object)
+     *	@param  string	$clause			'OR' or 'AND' clause used when both source id and target id are provided
+     *  @param	int		$alsosametype	0=Return only links to object that differs from source. 1=Include also link to objects of same type.
+     *	@return	void
+     *  @see	add_object_linked, updateObjectLinked, deleteObjectLinked
+     */
+	function fetchObjectLinked($sourceid=null,$sourcetype='',$targetid=null,$targettype='',$clause='OR',$alsosametype=1)
+    {
+        global $conf;
 
-		$this->linkedObjectsIds=array();
-		$this->linkedObjects=array();
+        $this->linkedObjectsIds=array();
+        $this->linkedObjects=array();
 
-		$justsource=false;
-		$justtarget=false;
-		$withtargettype=false;
-		$withsourcetype=false;
+        $justsource=false;
+        $justtarget=false;
+        $withtargettype=false;
+        $withsourcetype=false;
 
-		if (! empty($sourceid) && ! empty($sourcetype) && empty($targetid))
+        if (! empty($sourceid) && ! empty($sourcetype) && empty($targetid))
+        {
+        	$justsource=true;  // the source (id and type) is a search criteria
+        	if (! empty($targettype)) $withtargettype=true;
+        }
+        if (! empty($targetid) && ! empty($targettype) && empty($sourceid))
+        {
+        	$justtarget=true;  // the target (id and type) is a search criteria
+        	if (! empty($sourcetype)) $withsourcetype=true;
+        }
+
+        $sourceid = (! empty($sourceid) ? $sourceid : $this->id);
+        $targetid = (! empty($targetid) ? $targetid : $this->id);
+        $sourcetype = (! empty($sourcetype) ? $sourcetype : $this->element);
+        $targettype = (! empty($targettype) ? $targettype : $this->element);
+
+        /*if (empty($sourceid) && empty($targetid))
+        {
+        	dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
+        	return -1;
+        }*/
+
+        // Links between objects are stored in table element_element
+        $sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
+        $sql.= ' FROM '.MAIN_DB_PREFIX.'element_element';
+        $sql.= " WHERE ";
+        if ($justsource || $justtarget)
+        {
+            if ($justsource)
+            {
+            	$sql.= "fk_source = ".$sourceid." AND sourcetype = '".$sourcetype."'";
+            	if ($withtargettype) $sql.= " AND targettype = '".$targettype."'";
+            }
+            else if ($justtarget)
+            {
+            	$sql.= "fk_target = ".$targetid." AND targettype = '".$targettype."'";
+            	if ($withsourcetype) $sql.= " AND sourcetype = '".$sourcetype."'";
+            }
+        }
+        else
 		{
-			$justsource=true;  // the source (id and type) is a search criteria
-			if (! empty($targettype)) $withtargettype=true;
-		}
-		if (! empty($targetid) && ! empty($targettype) && empty($sourceid))
-		{
-			$justtarget=true;  // the target (id and type) is a search criteria
-			if (! empty($sourcetype)) $withsourcetype=true;
-		}
+            $sql.= "(fk_source = ".$sourceid." AND sourcetype = '".$sourcetype."')";
+            $sql.= " ".$clause." (fk_target = ".$targetid." AND targettype = '".$targettype."')";
+        }
+        $sql .= ' ORDER BY sourcetype';
+        //print $sql;
 
-		$sourceid = (! empty($sourceid) ? $sourceid : $this->id);
-		$targetid = (! empty($targetid) ? $targetid : $this->id);
-		$sourcetype = (! empty($sourcetype) ? $sourcetype : $this->element);
-		$targettype = (! empty($targettype) ? $targettype : $this->element);
+        dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
+        $resql = $this->db->query($sql);
+        if ($resql)
+        {
+            $num = $this->db->num_rows($resql);
+            $i = 0;
+            while ($i < $num)
+            {
+                $obj = $this->db->fetch_object($resql);
+                if ($justsource || $justtarget)
+                {
+                    if ($justsource)
+                    {
+                        $this->linkedObjectsIds[$obj->targettype][$obj->rowid]=$obj->fk_target;
+                    }
+                    else if ($justtarget)
+                    {
+                        $this->linkedObjectsIds[$obj->sourcetype][$obj->rowid]=$obj->fk_source;
+                    }
+                }
+                else
+                {
+                    if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype)
+                    {
+                        $this->linkedObjectsIds[$obj->targettype][$obj->rowid]=$obj->fk_target;
+                    }
+                    if ($obj->fk_target == $targetid && $obj->targettype == $targettype)
+                    {
+                        $this->linkedObjectsIds[$obj->sourcetype][$obj->rowid]=$obj->fk_source;
+                    }
+                }
+                $i++;
+            }
 
-		/*if (empty($sourceid) && empty($targetid))
-		 {
-		 dol_syslog('Bad usage of function. No source nor target id defined (nor as parameter nor as object id)', LOG_ERR);
-		 return -1;
-		 }*/
+            if (! empty($this->linkedObjectsIds))
+            {
+                foreach($this->linkedObjectsIds as $objecttype => $objectids)       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
+                {
+                    // Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
+                    $module = $element = $subelement = $objecttype;
+                    if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
+                        && preg_match('/^([^_]+)_([^_]+)/i',$objecttype,$regs))
+                    {
+                        $module = $element = $regs[1];
+                        $subelement = $regs[2];
+                    }
 
-		// Links between objects are stored in table element_element
-		$sql = 'SELECT rowid, fk_source, sourcetype, fk_target, targettype';
-		$sql.= ' FROM '.MAIN_DB_PREFIX.'element_element';
-		$sql.= " WHERE ";
-		if ($justsource || $justtarget)
-		{
-			if ($justsource)
-			{
-				$sql.= "fk_source = ".$sourceid." AND sourcetype = '".$sourcetype."'";
-				if ($withtargettype) $sql.= " AND targettype = '".$targettype."'";
-			}
-			elseif ($justtarget)
-			{
-				$sql.= "fk_target = ".$targetid." AND targettype = '".$targettype."'";
-				if ($withsourcetype) $sql.= " AND sourcetype = '".$sourcetype."'";
-			}
-		}
-		else
-		{
-			$sql.= "(fk_source = ".$sourceid." AND sourcetype = '".$sourcetype."')";
-			$sql.= " ".$clause." (fk_target = ".$targetid." AND targettype = '".$targettype."')";
-		}
-		$sql .= ' ORDER BY '.$orderby;
+                    $classpath = $element.'/class';
+                    // To work with non standard classpath or module name
+                    if ($objecttype == 'facture')			{
+                        $classpath = 'compta/facture/class';
+                    }
+                    else if ($objecttype == 'facturerec')			{
+                        $classpath = 'compta/facture/class'; $module = 'facture';
+                    }
+                    else if ($objecttype == 'propal')			{
+                        $classpath = 'comm/propal/class';
+                    }
+                    else if ($objecttype == 'supplier_proposal')			{
+                        $classpath = 'supplier_proposal/class';
+                    }
+                    else if ($objecttype == 'shipping')			{
+                        $classpath = 'expedition/class'; $subelement = 'expedition'; $module = 'expedition_bon';
+                    }
+                    else if ($objecttype == 'delivery')			{
+                        $classpath = 'livraison/class'; $subelement = 'livraison'; $module = 'livraison_bon';
+                    }
+                    else if ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier')	{
+                        $classpath = 'fourn/class'; $module = 'fournisseur';
+                    }
+                    else if ($objecttype == 'fichinter')			{
+                        $classpath = 'fichinter/class'; $subelement = 'fichinter'; $module = 'ficheinter';
+                    }
+                    else if ($objecttype == 'subscription')			{
+                        $classpath = 'adherents/class'; $module = 'adherent';
+                    }
 
-		dol_syslog(get_class($this)."::fetchObjectLink", LOG_DEBUG);
-		$resql = $this->db->query($sql);
-		if ($resql)
-		{
-			$num = $this->db->num_rows($resql);
-			$i = 0;
-			while ($i < $num)
-			{
-				$obj = $this->db->fetch_object($resql);
-				if ($justsource || $justtarget)
-				{
-					if ($justsource)
-					{
-						$this->linkedObjectsIds[$obj->targettype][$obj->rowid]=$obj->fk_target;
-					}
-					elseif ($justtarget)
-					{
-						$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid]=$obj->fk_source;
-					}
-				}
-				else
-				{
-					if ($obj->fk_source == $sourceid && $obj->sourcetype == $sourcetype)
-					{
-						$this->linkedObjectsIds[$obj->targettype][$obj->rowid]=$obj->fk_target;
-					}
-					if ($obj->fk_target == $targetid && $obj->targettype == $targettype)
-					{
-						$this->linkedObjectsIds[$obj->sourcetype][$obj->rowid]=$obj->fk_source;
-					}
-				}
-				$i++;
-			}
+                    // Set classfile
+                    $classfile = strtolower($subelement); $classname = ucfirst($subelement);
 
-			if (! empty($this->linkedObjectsIds))
-			{
-				$tmparray = $this->linkedObjectsIds;
-				foreach($tmparray as $objecttype => $objectids)       // $objecttype is a module name ('facture', 'mymodule', ...) or a module name with a suffix ('project_task', 'mymodule_myobj', ...)
-				{
-					// Parse element/subelement (ex: project_task, cabinetmed_consultation, ...)
-					$module = $element = $subelement = $objecttype;
-					if ($objecttype != 'supplier_proposal' && $objecttype != 'order_supplier' && $objecttype != 'invoice_supplier'
-						&& preg_match('/^([^_]+)_([^_]+)/i', $objecttype, $regs))
-					{
-						$module = $element = $regs[1];
-						$subelement = $regs[2];
-					}
+                    if ($objecttype == 'order') {
+                        $classfile = 'commande'; $classname = 'Commande';
+                    }
+                    else if ($objecttype == 'invoice_supplier') {
+                        $classfile = 'fournisseur.facture'; $classname = 'FactureFournisseur';
+                    }
+                    else if ($objecttype == 'order_supplier')   {
+                        $classfile = 'fournisseur.commande'; $classname = 'CommandeFournisseur';
+                    }
+                    else if ($objecttype == 'supplier_proposal')   {
+                        $classfile = 'supplier_proposal'; $classname = 'SupplierProposal';
+                    }
+                    else if ($objecttype == 'facturerec')   {
+                        $classfile = 'facture-rec'; $classname = 'FactureRec';
+                    }
+                    else if ($objecttype == 'subscription')   {
+                        $classfile = 'subscription'; $classname = 'Subscription';
+                    }
 
-					$classpath = $element.'/class';
-					// To work with non standard classpath or module name
-					if ($objecttype == 'facture')			{
-						$classpath = 'compta/facture/class';
-					}
-					elseif ($objecttype == 'facturerec')			{
-						$classpath = 'compta/facture/class'; $module = 'facture';
-					}
-					elseif ($objecttype == 'propal')			{
-						$classpath = 'comm/propal/class';
-					}
-					elseif ($objecttype == 'supplier_proposal')			{
-						$classpath = 'supplier_proposal/class';
-					}
-					elseif ($objecttype == 'shipping')			{
-						$classpath = 'expedition/class'; $subelement = 'expedition'; $module = 'expedition_bon';
-					}
-					elseif ($objecttype == 'delivery')			{
-						$classpath = 'livraison/class'; $subelement = 'livraison'; $module = 'livraison_bon';
-					}
-					elseif ($objecttype == 'invoice_supplier' || $objecttype == 'order_supplier')	{
-						$classpath = 'fourn/class'; $module = 'fournisseur';
-					}
-					elseif ($objecttype == 'fichinter')			{
-						$classpath = 'fichinter/class'; $subelement = 'fichinter'; $module = 'ficheinter';
-					}
-					elseif ($objecttype == 'subscription')			{
-						$classpath = 'adherents/class'; $module = 'adherent';
-					}
+                    // Here $module, $classfile and $classname are set
+                    if ($conf->$module->enabled && (($element != $this->element) || $alsosametype))
+                    {
+                        dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
+                        //print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
+                        if (class_exists($classname))
+                        {
+	                        foreach($objectids as $i => $objectid)	// $i is rowid into llx_element_element
+	                        {
+	                            $object = new $classname($this->db);
+	                            $ret = $object->fetch($objectid);
+	                            if ($ret >= 0)
+	                            {
+	                                $this->linkedObjects[$objecttype][$i] = $object;
+	                            }
+	                        }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            dol_print_error($this->db);
+        }
+    }
 
-					// Set classfile
-					$classfile = strtolower($subelement); $classname = ucfirst($subelement);
+    /**
+     *	Update object linked of a current object
+     *
+     *	@param	int		$sourceid		Object source id
+     *	@param  string	$sourcetype		Object source type
+     *	@param  int		$targetid		Object target id
+     *	@param  string	$targettype		Object target type
+     *	@return							int	>0 if OK, <0 if KO
+     *	@see	add_object_linked, fetObjectLinked, deleteObjectLinked
+     */
+    function updateObjectLinked($sourceid=null, $sourcetype='', $targetid=null, $targettype='')
+    {
+    	$updatesource=false;
+    	$updatetarget=false;
 
-					if ($objecttype == 'order') {
-						$classfile = 'commande'; $classname = 'Commande';
-					}
-					elseif ($objecttype == 'invoice_supplier') {
-						$classfile = 'fournisseur.facture'; $classname = 'FactureFournisseur';
-					}
-					elseif ($objecttype == 'order_supplier')   {
-						$classfile = 'fournisseur.commande'; $classname = 'CommandeFournisseur';
-					}
-					elseif ($objecttype == 'supplier_proposal')   {
-						$classfile = 'supplier_proposal'; $classname = 'SupplierProposal';
-					}
-					elseif ($objecttype == 'facturerec')   {
-						$classfile = 'facture-rec'; $classname = 'FactureRec';
-					}
-					elseif ($objecttype == 'subscription')   {
-						$classfile = 'subscription'; $classname = 'Subscription';
-					}
+    	if (! empty($sourceid) && ! empty($sourcetype) && empty($targetid) && empty($targettype)) $updatesource=true;
+    	else if (empty($sourceid) && empty($sourcetype) && ! empty($targetid) && ! empty($targettype)) $updatetarget=true;
 
-					// Here $module, $classfile and $classname are set
-					if ($conf->$module->enabled && (($element != $this->element) || $alsosametype))
-					{
-						if ($loadalsoobjects)
-						{
-							dol_include_once('/'.$classpath.'/'.$classfile.'.class.php');
-							//print '/'.$classpath.'/'.$classfile.'.class.php '.class_exists($classname);
-							if (class_exists($classname))
-							{
-								foreach($objectids as $i => $objectid)	// $i is rowid into llx_element_element
-								{
-									$object = new $classname($this->db);
-									$ret = $object->fetch($objectid);
-									if ($ret >= 0)
-									{
-										$this->linkedObjects[$objecttype][$i] = $object;
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						unset($this->linkedObjectsIds[$objecttype]);
-					}
-				}
-			}
-			return 1;
-		}
-		else
-		{
-			dol_print_error($this->db);
-			return -1;
-		}
-	}
+    	$sql = "UPDATE ".MAIN_DB_PREFIX."element_element SET ";
+    	if ($updatesource)
+    	{
+    		$sql.= "fk_source = ".$sourceid;
+    		$sql.= ", sourcetype = '".$this->db->escape($sourcetype)."'";
+    		$sql.= " WHERE fk_target = ".$this->id;
+    		$sql.= " AND targettype = '".$this->db->escape($this->element)."'";
+    	}
+    	else if ($updatetarget)
+    	{
+    		$sql.= "fk_target = ".$targetid;
+    		$sql.= ", targettype = '".$this->db->escape($targettype)."'";
+    		$sql.= " WHERE fk_source = ".$this->id;
+    		$sql.= " AND sourcetype = '".$this->db->escape($this->element)."'";
+    	}
 
-	/**
-	 *	Update object linked of a current object
-	 *
-	 *	@param	int		$sourceid		Object source id
-	 *	@param  string	$sourcetype		Object source type
-	 *	@param  int		$targetid		Object target id
-	 *	@param  string	$targettype		Object target type
-	 *	@return							int	>0 if OK, <0 if KO
-	 *	@see	add_object_linked(), fetObjectLinked(), deleteObjectLinked()
-	 */
-	public function updateObjectLinked($sourceid = null, $sourcetype = '', $targetid = null, $targettype = '')
-	{
-		$updatesource=false;
-		$updatetarget=false;
-
-		if (! empty($sourceid) && ! empty($sourcetype) && empty($targetid) && empty($targettype)) $updatesource=true;
-		elseif (empty($sourceid) && empty($sourcetype) && ! empty($targetid) && ! empty($targettype)) $updatetarget=true;
-
-		$sql = "UPDATE ".MAIN_DB_PREFIX."element_element SET ";
-		if ($updatesource)
-		{
-			$sql.= "fk_source = ".$sourceid;
-			$sql.= ", sourcetype = '".$this->db->escape($sourcetype)."'";
-			$sql.= " WHERE fk_target = ".$this->id;
-			$sql.= " AND targettype = '".$this->db->escape($this->element)."'";
-		}
-		elseif ($updatetarget)
-		{
-			$sql.= "fk_target = ".$targetid;
-			$sql.= ", targettype = '".$this->db->escape($targettype)."'";
-			$sql.= " WHERE fk_source = ".$this->id;
-			$sql.= " AND sourcetype = '".$this->db->escape($this->element)."'";
-		}
-
-		dol_syslog(get_class($this)."::updateObjectLinked", LOG_DEBUG);
-		if ($this->db->query($sql))
-		{
-			return 1;
-		}
-		else
-		{
-			$this->error=$this->db->lasterror();
-			return -1;
-		}
-	}
+    	dol_syslog(get_class($this)."::updateObjectLinked", LOG_DEBUG);
+    	if ($this->db->query($sql))
+    	{
+    		return 1;
+    	}
+    	else
+    	{
+    		$this->error=$this->db->lasterror();
+    		return -1;
+    	}
+    }
 
 	/**
 	 *	Delete all links between an object $this
