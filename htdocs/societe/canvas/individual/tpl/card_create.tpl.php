@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010-2011 Regis Houssin       <regis.houssin@capnetworks.com>
+/* Copyright (C) 2010-2011 Regis Houssin       <regis.houssin@inodbox.com>
  * Copyright (C) 2010-2012 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -150,7 +150,7 @@ if (empty($conf) || ! is_object($conf))
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans('EMail').($conf->global->SOCIETE_MAIL_REQUIRED?'*':''); ?></td>
+	<td><?php echo $langs->trans('EMail').($conf->global->SOCIETE_EMAIL_MANDATORY?'*':''); ?></td>
 	<td><input type="text" name="email" size="32" value="<?php echo $this->control->tpl['email']; ?>"></td>
 	<td><?php echo $langs->trans('Web'); ?></td>
 	<td><input type="text" name="url" size="32" value="<?php echo $this->control->tpl['url']; ?>"></td>
@@ -178,7 +178,7 @@ if (empty($conf) || ! is_object($conf))
 <?php } ?>
 
 <tr>
-	<td colspan="4" align="center"><input type="submit" class="button" value="<?php echo $langs->trans('AddThirdParty'); ?>"></td>
+	<td colspan="4" class="center"><input type="submit" class="button" value="<?php echo $langs->trans('AddThirdParty'); ?>"></td>
 </tr>
 
 </table>

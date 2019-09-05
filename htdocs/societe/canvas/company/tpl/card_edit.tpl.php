@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2010      Regis Houssin       <regis.houssin@capnetworks.com>
+/* Copyright (C) 2010      Regis Houssin       <regis.houssin@inodbox.com>
  * Copyright (C) 2010-2012 Laurent Destailleur <eldy@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -116,7 +116,10 @@ if ($this->control->tpl['fournisseur']) {
 	<td><?php echo $langs->trans('SupplierCategory'); ?></td>
 	<td colspan="3"><?php echo $this->control->tpl['select_suppliercategory']; ?></td>
 </tr>
-<?php } }?>
+<?php
+    }
+}
+?>
 
 <?php if (! empty($conf->barcode->enabled)) { ?>
 <tr>
@@ -155,7 +158,7 @@ if ($this->control->tpl['fournisseur']) {
 </tr>
 
 <tr>
-	<td><?php echo $langs->trans('EMail').($conf->global->SOCIETE_MAIL_REQUIRED?'*':''); ?></td>
+	<td><?php echo $langs->trans('EMail').($conf->global->SOCIETE_EMAIL_MANDATORY?'*':''); ?></td>
 	<td><input type="text" name="email" size="32" value="<?php echo $this->control->tpl['email']; ?>"></td>
 	<td><?php echo $langs->trans('Web'); ?></td>
 	<td><input type="text" name="url" size="32" value="<?php echo $this->control->tpl['url']; ?>"></td>
@@ -213,7 +216,7 @@ for ($i=1; $i<=4; $i++) {
 </table>
 <br>
 
-<div align="center">
+<div class="center">
 <input type="submit" class="button" name="save" value="<?php echo $langs->trans("Save"); ?>">
 &nbsp; &nbsp;
 <input type="submit" class="button" name="cancel" value="<?php echo $langs->trans("Cancel"); ?>">

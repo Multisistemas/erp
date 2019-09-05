@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Copyright (C) 2002-2003	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
--- Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@capnetworks.com>
+-- Copyright (C) 2005-2012	Regis Houssin			<regis.houssin@inodbox.com>
 -- Copyright (C) 2010		Juanjo Menent			<jmenent@2byte.es>
 --
 -- This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,9 @@
 -- along with this program. If not, see <http://www.gnu.org/licenses/>.
 --
 -- ============================================================================
+
+-- To save customer prices (one price per product or several prices per segment/level)
+-- TODO We should introduce table llx_product_price_log to store changes and keep in this table only last current price !
 
 create table llx_product_price
 (

@@ -23,8 +23,8 @@
  *                  More data like token are saved into session. This token can be used to get more informations.
  */
 
-define("NOLOGIN",1);		// This means this output page does not require to be logged.
-define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
+define("NOLOGIN", 1);		// This means this output page does not require to be logged.
+define("NOCSRFCHECK", 1);	// We accept to go on this page from external web site.
 
 // For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
@@ -36,13 +36,7 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 
-$langs->load("main");
-$langs->load("other");
-$langs->load("dict");
-$langs->load("bills");
-$langs->load("companies");
-$langs->load("paybox");
-$langs->load("paypal");
+$langs->loadLangs(array("main", "other", "dict", "bills", "companies", "paybox", "paypal"));
 
 $FULLTAG=GETPOST('FULLTAG');
 if (empty($FULLTAG)) $FULLTAG=GETPOST('fulltag');
@@ -82,7 +76,7 @@ foreach($_POST as $k => $v) $tracepost .= "{$k} - {$v}\n";
 dol_syslog("POST=".$tracepost, LOG_DEBUG, 0, '_stripe');
 
 $head='';
-if (! empty($conf->global->STRIPE_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->STRIPE_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
+if (! empty($conf->global->ONLINE_PAYMENT_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->ONLINE_PAYMENT_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
 
 $conf->dol_hide_topmenu=1;
 $conf->dol_hide_leftmenu=1;
@@ -105,7 +99,7 @@ if ($ispaymentok)
     // Set by newpayment.php
     $paymentType        = $_SESSION['PaymentType'];
     $currencyCodeType   = $_SESSION['currencyCodeType'];
-    $FinalPaymentAmt    = $_SESSION["Payment_Amount"];
+    $FinalPaymentAmt    = $_SESSION["FinalPaymentAmt"];
     // From env
     $ipaddress          = $_SESSION['ipaddress'];
     $TRANSACTIONID      = $_SESSION['TRANSACTIONID'];
@@ -113,25 +107,29 @@ if ($ispaymentok)
     // Appel des triggers
     include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
     $interface=new Interfaces($db);
-    $result=$interface->run_triggers('STRIPE_PAYMENT_OK',$object,$user,$langs,$conf);
+    $result=$interface->run_triggers('STRIPE_PAYMENT_OK', $object, $user, $langs, $conf);
     if ($result < 0) { $error++; $errors=$interface->errors; }
     // Fin appel triggers
 
-    
+
     print $langs->trans("YourPaymentHasBeenRecorded")."<br>\n";
-    print $langs->trans("ThisIsTransactionId",$TRANSACTIONID)."<br><br>\n";
-    if (! empty($conf->global->STRIPE_MESSAGE_OK)) print $conf->global->STRIPE_MESSAGE_OK;
-    
+    print $langs->trans("ThisIsTransactionId", $TRANSACTIONID)."<br><br>\n";
+
+	$key='ONLINE_PAYMENT_MESSAGE_OK';
+	if (! empty($conf->global->$key)) print $conf->global->$key;
+
     $sendemail = '';
-    if (! empty($conf->global->STRIPE_PAYONLINE_SENDEMAIL)) $sendemail=$conf->global->STRIPE_PAYONLINE_SENDEMAIL;
-    
+    if (! empty($conf->global->ONLINE_PAYMENT_SENDEMAIL)) $sendemail=$conf->global->ONLINE_PAYMENT_SENDEMAIL;
+
+    $tmptag=dolExplodeIntoArray($fulltag, '.', '=');
+
 	// Send an email
     if ($sendemail)
 	{
 		$sendto=$sendemail;
 		$from=$conf->global->MAILING_EMAIL_FROM;
 		// Define $urlwithroot
-		$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT,'/').'$/i','',trim($dolibarr_main_url_root));
+		$urlwithouturlroot=preg_replace('/'.preg_quote(DOL_URL_ROOT, '/').'$/i', '', trim($dolibarr_main_url_root));
 		$urlwithroot=$urlwithouturlroot.DOL_URL_ROOT;		// This is to use external domain name found into config file
 		//$urlwithroot=DOL_MAIN_URL_ROOT;					// This is to use same domain name than current
 
@@ -147,15 +145,14 @@ if ($ispaymentok)
     	    else $appli.=" ".DOL_VERSION;
     	}
     	else $appli.=" ".DOL_VERSION;
-    	
+
     	$urlback=$_SERVER["REQUEST_URI"];
 		$topic='['.$appli.'] '.$langs->transnoentitiesnoconv("NewOnlinePaymentReceived");
-		$tmptag=dolExplodeIntoArray($fulltag,'.','=');
 		$content="";
 		if (! empty($tmptag['MEM']))
 		{
 			$langs->load("members");
-			$url=$urlwithroot."/adherents/card_subscriptions.php?rowid=".$tmptag['MEM'];
+			$url=$urlwithroot."/adherents/subscription.php?rowid=".$tmptag['MEM'];
 			$content.=$langs->trans("PaymentSubscription")."<br>\n";
 			$content.=$langs->trans("MemberId").': '.$tmptag['MEM']."<br>\n";
 			$content.=$langs->trans("Link").': <a href="'.$url.'">'.$url.'</a>'."<br>\n";
@@ -191,7 +188,7 @@ if ($ispaymentok)
 print "\n</div>\n";
 
 
-htmlPrintOnlinePaymentFooter($mysoc,$langs);
+htmlPrintOnlinePaymentFooter($mysoc, $langs, 0, $suffix);
 
 
 llxFooter('', 'public');

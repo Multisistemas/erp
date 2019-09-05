@@ -1,6 +1,6 @@
 <?php
 /* Copyright (C) 2017	Laurent Destailleur		<eldy@users.sourceforge.net>
-*
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
@@ -23,8 +23,8 @@
  *                  More data like token are saved into session. This token can be used to get more informations.
  */
 
-define("NOLOGIN",1);		// This means this output page does not require to be logged.
-define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
+define("NOLOGIN", 1);		// This means this output page does not require to be logged.
+define("NOCSRFCHECK", 1);	// We accept to go on this page from external web site.
 
 // For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
@@ -36,20 +36,13 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 
-$langs->load("main");
-$langs->load("other");
-$langs->load("dict");
-$langs->load("bills");
-$langs->load("companies");
-$langs->load("paybox");
-$langs->load("paypal");
-$langs->load("stripe");
+$langs->loadLangs(array("main", "other", "dict", "bills", "companies", "paybox", "paypal", "stripe"));
 
 $FULLTAG=GETPOST('FULLTAG');
 if (empty($FULLTAG)) $FULLTAG=GETPOST('fulltag');
 
 // Security check
-if (empty($conf->stripe->enabled)) accessforbidden('',0,0,1);
+if (empty($conf->stripe->enabled)) accessforbidden('', 0, 0, 1);
 
 $object = new stdClass();   // For triggers
 
@@ -82,24 +75,24 @@ if (! empty($_SESSION['ipaddress']))      // To avoid to make action twice
     $paymentType        = $_SESSION['paymentType'];
     $FinalPaymentAmt    = $_SESSION['FinalPaymentAmt'];
     $ipaddress          = $_SESSION['ipaddress'];
-    
+
     // Appel des triggers
     include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
     $interface=new Interfaces($db);
-    $result=$interface->run_triggers('STRIPE_PAYMENT_KO',$object,$user,$langs,$conf);
+    $result=$interface->run_triggers('STRIPE_PAYMENT_KO', $object, $user, $langs, $conf);
     if ($result < 0) { $error++; $errors=$interface->errors; }
     // Fin appel triggers
-    
+
     // Send an email
     $sendemail = '';
-    if (! empty($conf->global->PAYPAL_PAYONLINE_SENDEMAIL))  $sendemail=$conf->global->PAYPAL_PAYONLINE_SENDEMAIL;
-    
+    if (! empty($conf->global->ONLINE_PAYMENT_SENDEMAIL))  $sendemail=$conf->global->ONLINE_PAYMENT_SENDEMAIL;
+
     if ($sendemail)
     {
         // Get on url call
     	$sendto=$sendemail;
     	$from=$conf->global->MAILING_EMAIL_FROM;
-    
+
     	// Define link to login card
     	$appli=constant('DOL_APPLICATION_TITLE');
     	if (! empty($conf->global->MAIN_APPLICATION_TITLE))
@@ -112,7 +105,7 @@ if (! empty($_SESSION['ipaddress']))      // To avoid to make action twice
     	    else $appli.=" ".DOL_VERSION;
     	}
     	else $appli.=" ".DOL_VERSION;
-    	
+
     	$urlback=$_SERVER["REQUEST_URI"];
     	$topic='['.$appli.'] '.$langs->transnoentitiesnoconv("NewOnlinePaymentFailed");
     	$content="";
@@ -124,7 +117,7 @@ if (! empty($_SESSION['ipaddress']))      // To avoid to make action twice
     	$content.="tag=".$fulltag."\ntoken=".$onlinetoken." paymentType=".$paymentType." currencycodeType=".$currencyCodeType." payerId=".$payerID." ipaddress=".$ipaddress." FinalPaymentAmt=".$FinalPaymentAmt;
     	require_once DOL_DOCUMENT_ROOT.'/core/class/CMailFile.class.php';
     	$mailfile = new CMailFile($topic, $sendto, $from, $content);
-    
+
     	$result=$mailfile->sendfile();
     	if ($result)
     	{
@@ -140,7 +133,7 @@ if (! empty($_SESSION['ipaddress']))      // To avoid to make action twice
 }
 
 $head='';
-if (! empty($conf->global->STRIPE_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->STRIPE_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
+if (! empty($conf->global->ONLINE_PAYMENT_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->ONLINE_PAYMENT_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
 
 $conf->dol_hide_topmenu=1;
 $conf->dol_hide_leftmenu=1;
@@ -153,11 +146,13 @@ print '<span id="dolpaymentspan"></span>'."\n";
 print '<div id="dolpaymentdiv" align="center">'."\n";
 print $langs->trans("YourPaymentHasNotBeenRecorded")."<br><br>";
 
-if (! empty($conf->global->STRIPE_MESSAGE_KO)) print $conf->global->STRIPE_MESSAGE_KO;
+$key='ONLINE_PAYMENT_MESSAGE_KO';
+if (! empty($conf->global->$key)) print $conf->global->$key;
+
 print "\n</div>\n";
 
 
-htmlPrintOnlinePaymentFooter($mysoc,$langs);
+htmlPrintOnlinePaymentFooter($mysoc, $langs, 0, $suffix);
 
 
 llxFooter('', 'public');

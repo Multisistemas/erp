@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2005-2009  Regis Houssin        <regis.houssin@capnetworks.com>
+/* Copyright (C) 2005-2009  Regis Houssin        <regis.houssin@inodbox.com>
  * Copyright (C) 2009-2016  Laurent Destailleur  <eldy@users.sourceforge.net>
  * Copyright (C) 2011       Juanjo Menent        <jmenent@2byte.es>
  * Copyright (C) 2017      Ferran Marcet       	 <fmarcet@2byte.es>
@@ -32,12 +32,12 @@ if (! empty($conf->projet->enabled)) {
 	require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 }
 
-$langs->load('companies');
-$langs->load("interventions");
+// Load translation files required by the page
+$langs->loadLangs(array('companies', 'interventions'));
 
 $socid=0;
-$id = GETPOST('id','int');
-$ref=GETPOST('ref','alpha');
+$id = GETPOST('id', 'int');
+$ref=GETPOST('ref', 'alpha');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -58,7 +58,7 @@ if (! $object->fetch($id, $ref) > 0)
 
 $form = new Form($db);
 
-llxHeader('',$langs->trans("Intervention"));
+llxHeader('', $langs->trans("Intervention"));
 
 $object->fetch_thirdparty();
 $object->info($object->id);
@@ -67,7 +67,7 @@ $head = fichinter_prepare_head($object);
 dol_fiche_head($head, 'info', $langs->trans('InterventionCard'), -1, 'intervention');
 
 // Intervention card
-$linkback = '<a href="'.DOL_URL_ROOT.'/fichinter/list.php'.(! empty($socid)?'?socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
+$linkback = '<a href="'.DOL_URL_ROOT.'/fichinter/list.php?restore_lastsearch_values=1'.(! empty($socid)?'&socid='.$socid:'').'">'.$langs->trans("BackToList").'</a>';
 
 
 $morehtmlref='<div class="refidno">';

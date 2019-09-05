@@ -39,7 +39,7 @@
  *		@param	int		$qty						Quantity
  * 		@param 	float	$pu                         Unit price (HT or TTC selon price_base_type)
  *		@param 	float	$remise_percent_ligne       Discount for line
- *		@param 	float	$txtva                      0=do not apply standard tax, Vat rate=apply
+ *		@param 	float	$txtva                      0=do not apply VAT tax, VAT rate=apply (this is VAT rate only without text code, we don't need text code because we alreaydy have all tax info into $localtaxes_array)
  *		@param  float	$uselocaltax1_rate          0=do not use this localtax, >0=apply and get value from localtaxes_array (or database if empty), -1=autodetect according to seller if we must apply, get value from localtaxes_array (or database if empty). Try to always use -1.
  *		@param  float	$uselocaltax2_rate          0=do not use this localtax, >0=apply and get value from localtaxes_array (or database if empty), -1=autodetect according to seller if we must apply, get value from localtaxes_array (or database if empty). Try to always use -1.
  *		@param 	float	$remise_percent_global		0
@@ -63,18 +63,26 @@
  *						 8=total_ttc_without_discount, (total_ht + main vat + local taxes)
  *						 9=total_tax1 for total_ht,
  *						10=total_tax2 for total_ht,
- *						11=pu_tax1 for pu_ht, !! should not be used
- *						12=pu_tax2 for pu_ht, !! should not be used
- *						13=??                 !! should not be used
- *						14=total_tax1 for total_ht_without_discount,
- *						15=total_tax2 for total_ht_without_discount,
+ *
+ *						11=pu_tax1 for pu_ht, 							!! should not be used
+ *						12=pu_tax2 for pu_ht, 							!! should not be used
+ *						13=??                 							!! should not be used
+ *						14=total_tax1 for total_ht_without_discount,	!! should not be used
+ *						15=total_tax2 for total_ht_without_discount,	!! should not be used
  *
  * 						16=multicurrency_total_ht
  * 						17=multicurrency_total_tva
  * 						18=multicurrency_total_ttc
  * 						19=multicurrency_pu_ht
+ * 						20=multicurrency_pu_vat
+ * 						21=multicurrency_pu_ttc
+ * 						22=multicurrency_total_ht_without_discount
+ * 						23=multicurrency_total_vat_without_discount
+ * 						24=multicurrency_total_ttc_without_discount
+ * 						25=multicurrency_total_tax1 for total_ht
+ *                      26=multicurrency_total_tax2 for total_ht
  */
-function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocaltax1_rate, $uselocaltax2_rate, $remise_percent_global, $price_base_type, $info_bits, $type, $seller = '', $localtaxes_array='', $progress=100, $multicurrency_tx=1, $pu_devise=0)
+function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocaltax1_rate, $uselocaltax2_rate, $remise_percent_global, $price_base_type, $info_bits, $type, $seller = '', $localtaxes_array = '', $progress = 100, $multicurrency_tx = 1, $pu_devise = 0)
 {
 	global $conf,$mysoc,$db;
 
@@ -109,6 +117,7 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 	if ($uselocaltax1_rate < 0) $uselocaltax1_rate=$seller->localtax1_assuj;
 	if ($uselocaltax2_rate < 0) $uselocaltax2_rate=$seller->localtax2_assuj;
 
+	//var_dump($uselocaltax1_rate.' - '.$uselocaltax2_rate);
 	dol_syslog('Price.lib::calcul_price_total qty='.$qty.' pu='.$pu.' remise_percent_ligne='.$remise_percent_ligne.' txtva='.$txtva.' uselocaltax1_rate='.$uselocaltax1_rate.' uselocaltax2_rate='.$uselocaltax2_rate.' remise_percent_global='.$remise_percent_global.' price_base_type='.$price_base_type.' type='.$type.' progress='.$progress);
 
     // Now we search localtaxes information ourself (rates and types).
@@ -122,13 +131,14 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 		$localtax2_type = $localtaxes_array[2];
 		$localtax2_rate = $localtaxes_array[3];
 	}
-	else	// deprecated method. values and type for localtaxes must be provided by caller and loaded with getLocalTaxesFromRate
+	else	// deprecated method. values and type for localtaxes must be provided by caller and loaded with getLocalTaxesFromRate using the full vat rate (including text code)
 	{
-		$sql = "SELECT taux, localtax1, localtax2, localtax1_type, localtax2_type";
+	    dol_syslog("Price.lib::calcul_price_total search vat information using old deprecated method", LOG_WARNING);
+
+	    $sql = "SELECT taux, localtax1, localtax2, localtax1_type, localtax2_type";
 		$sql.= " FROM ".MAIN_DB_PREFIX."c_tva as cv";
 		$sql.= " WHERE cv.taux = ".$txtva;
 		$sql.= " AND cv.fk_pays = ".$countryid;
-		dol_syslog("Price.lib::calcul_price_total search vat information using old deprecated method", LOG_WARNING);
 		$resql = $db->query($sql);
 		if ($resql)
 		{
@@ -146,11 +156,23 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 	}
 
 	// pu calculation from pu_devise if pu empty
-	if(empty($pu) && !empty($pu_devise)) {
-		$pu = $pu_devise / $multicurrency_tx;
+	if (empty($pu) && !empty($pu_devise)) {
+		if (! empty($multicurrency_tx)) $pu = $pu_devise / $multicurrency_tx;
+		else
+		{
+			dol_syslog('Price.lib::calcul_price_total function called with bad parameters combination (multicurrency_tx empty when pu_devise not) ', LOG_ERR);
+			return array();
+		}
 	}
-	if(empty($pu_devise) && !empty($multicurrency_tx)) {
-		$pu_devise = $pu * $multicurrency_tx;
+	if ($pu === '') $pu=0;
+	// pu_devise calculation from pu
+	if (empty($pu_devise) && !empty($multicurrency_tx)) {
+		if (is_numeric($pu) && is_numeric($multicurrency_tx)) $pu_devise = $pu * $multicurrency_tx;
+		else
+		{
+			dol_syslog('Price.lib::calcul_price_total function called with bad parameters combination (pu or multicurrency_tx are not numeric)', LOG_ERR);
+			return array();
+		}
 	}
 
 	// initialize total (may be HT or TTC depending on price_base_type)
@@ -166,9 +188,9 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
     //If input unit price is 'HT', we need to have the totals with main VAT for a correct calculation
     if ($price_base_type != 'TTC')
     {
-    	$tot_sans_remise_wt = price2num($tot_sans_remise * (1 + ($txtva / 100)),'MU');
-    	$tot_avec_remise_wt = price2num($tot_avec_remise * (1 + ($txtva / 100)),'MU');
-    	$pu_wt = price2num($pu * (1 + ($txtva / 100)),'MU');
+    	$tot_sans_remise_wt = price2num($tot_sans_remise * (1 + ($txtva / 100)), 'MU');
+    	$tot_avec_remise_wt = price2num($tot_avec_remise * (1 + ($txtva / 100)), 'MU');
+    	$pu_wt = price2num($pu * (1 + ($txtva / 100)), 'MU');
     }
     else
     {
@@ -181,7 +203,7 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 
     $localtaxes = array(0,0,0);
     $apply_tax = false;
-  	switch($localtax1_type) {
+    switch($localtax1_type) {
       case '2':     // localtax on product or service
         $apply_tax = true;
         break;
@@ -192,6 +214,7 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
         if ($type == 1) $apply_tax = true;
         break;
     }
+
     if ($uselocaltax1_rate && $apply_tax) {
   		$result[14] = price2num(($tot_sans_remise_wt * (1 + ( $localtax1_rate / 100))) - $tot_sans_remise_wt, 'MT');
   		$localtaxes[0] += $result[14];
@@ -204,16 +227,16 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
     }
 
     $apply_tax = false;
-  	switch($localtax2_type) {
-      case '2':     // localtax on product or service
-        $apply_tax = true;
-        break;
-      case '4':     // localtax on product
-        if ($type == 0) $apply_tax = true;
-        break;
-      case '6':     // localtax on service
-        if ($type == 1) $apply_tax = true;
-        break;
+    switch($localtax2_type) {
+        case '2':     // localtax on product or service
+            $apply_tax = true;
+            break;
+        case '4':     // localtax on product
+            if ($type == 0) $apply_tax = true;
+            break;
+        case '6':     // localtax on service
+            if ($type == 1) $apply_tax = true;
+            break;
     }
     if ($uselocaltax2_rate && $apply_tax) {
   		$result[15] = price2num(($tot_sans_remise_wt * (1 + ( $localtax2_rate / 100))) - $tot_sans_remise_wt, 'MT');
@@ -269,9 +292,9 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
     //If input unit price is 'TTC', we need to have the totals without main VAT for a correct calculation
     if ($price_base_type == 'TTC')
     {
-    	$tot_sans_remise= price2num($tot_sans_remise / (1 + ($txtva / 100)),'MU');
-    	$tot_avec_remise= price2num($tot_avec_remise / (1 + ($txtva / 100)),'MU');
-    	$pu = price2num($pu / (1 + ($txtva / 100)),'MU');
+    	$tot_sans_remise= price2num($tot_sans_remise / (1 + ($txtva / 100)), 'MU');
+    	$tot_avec_remise= price2num($tot_avec_remise / (1 + ($txtva / 100)), 'MU');
+    	$pu = price2num($pu / (1 + ($txtva / 100)), 'MU');
     }
 
 	$apply_tax = false;
@@ -298,16 +321,16 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
     }
 
     $apply_tax = false;
-  	switch($localtax2_type) {
-      case '1':     // localtax on product or service
-        $apply_tax = true;
-        break;
-      case '3':     // localtax on product
-        if ($type == 0) $apply_tax = true;
-        break;
-      case '5':     // localtax on service
-        if ($type == 1) $apply_tax = true;
-        break;
+    switch($localtax2_type) {
+        case '1':     // localtax on product or service
+            $apply_tax = true;
+            break;
+        case '3':     // localtax on product
+            if ($type == 0) $apply_tax = true;
+            break;
+        case '5':     // localtax on service
+            if ($type == 1) $apply_tax = true;
+            break;
     }
     if ($uselocaltax2_rate && $apply_tax) {
   		$result[15] = price2num(($tot_sans_remise * (1 + ( $localtax2_rate / 100))) - $tot_sans_remise, 'MT');	// amount tax2 for total_ht_without_discount
@@ -388,4 +411,3 @@ function calcul_price_total($qty, $pu, $remise_percent_ligne, $txtva, $uselocalt
 
 	return $result;
 }
-

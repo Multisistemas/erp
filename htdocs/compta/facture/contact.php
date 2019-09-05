@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2005      Patrick Rouillon     <patrick@rouillon.net>
  * Copyright (C) 2005-2009 Destailleur Laurent  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2012 Regis Houssin        <regis.houssin@inodbox.com>
  * Copyright (C) 2011-2015 Philippe Grand       <philippe.grand@atoo-net.com>
  * Copyright (C) 2017      Ferran Marcet       	 <fmarcet@2byte.es>
  *
@@ -35,14 +35,14 @@ if (! empty($conf->projet->enabled)) {
 	require_once DOL_DOCUMENT_ROOT . '/projet/class/project.class.php';
 }
 
-$langs->load("bills");
-$langs->load("companies");
+// Load translation files required by the page
+$langs->loadLangs(array('bills', 'companies'));
 
-$id     = (GETPOST('id')?GETPOST('id','int'):GETPOST('facid','int'));  // For backward compatibility
-$ref    = GETPOST('ref','alpha');
-$lineid = GETPOST('lineid','int');
-$socid  = GETPOST('socid','int');
-$action = GETPOST('action','alpha');
+$id     = (GETPOST('id')?GETPOST('id', 'int'):GETPOST('facid', 'int'));  // For backward compatibility
+$ref    = GETPOST('ref', 'alpha');
+$lineid = GETPOST('lineid', 'int');
+$socid  = GETPOST('socid', 'int');
+$action = GETPOST('action', 'alpha');
 
 // Security check
 if ($user->societe_id) $socid=$user->societe_id;
@@ -61,7 +61,7 @@ if ($action == 'addcontact' && $user->rights->facture->creer)
 
     if ($result > 0 && $id > 0)
     {
-    	$contactid = (GETPOST('userid') ? GETPOST('userid','int') : GETPOST('contactid','int'));
+    	$contactid = (GETPOST('userid') ? GETPOST('userid', 'int') : GETPOST('contactid', 'int'));
   		$result = $object->add_contact($contactid, $_POST["type"], $_POST["source"]);
     }
 
@@ -85,7 +85,7 @@ if ($action == 'addcontact' && $user->rights->facture->creer)
 }
 
 // Toggle the status of a contact
-else if ($action == 'swapstatut' && $user->rights->facture->creer)
+elseif ($action == 'swapstatut' && $user->rights->facture->creer)
 {
 	if ($object->fetch($id))
 	{
@@ -98,7 +98,7 @@ else if ($action == 'swapstatut' && $user->rights->facture->creer)
 }
 
 // Deletes a contact
-else if ($action == 'deletecontact' && $user->rights->facture->creer)
+elseif ($action == 'deletecontact' && $user->rights->facture->creer)
 {
 	$object->fetch($id);
 	$result = $object->delete_contact($lineid);
@@ -143,19 +143,19 @@ if ($id > 0 || ! empty($ref))
 		$head = facture_prepare_head($object);
 
 		$totalpaye = $object->getSommePaiement();
-		
+
 		dol_fiche_head($head, 'contact', $langs->trans('InvoiceCustomer'), -1, 'bill');
 
 		// Invoice content
-		
-		$linkback = '<a href="' . DOL_URL_ROOT . '/compta/facture/list.php' . (! empty($socid) ? '?socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
-	
+
+		$linkback = '<a href="' . DOL_URL_ROOT . '/compta/facture/list.php?restore_lastsearch_values=1' . (! empty($socid) ? '&socid=' . $socid : '') . '">' . $langs->trans("BackToList") . '</a>';
+
 		$morehtmlref='<div class="refidno">';
 		// Ref customer
 		$morehtmlref.=$form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', 0, 1);
 		$morehtmlref.=$form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', null, null, '', 1);
 		// Thirdparty
-		$morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1);
+		$morehtmlref.='<br>'.$langs->trans('ThirdParty') . ' : ' . $object->thirdparty->getNomUrl(1, 'customer');
 		// Project
 		if (! empty($conf->projet->enabled))
 		{
@@ -190,23 +190,22 @@ if ($id > 0 || ! empty($ref))
 		    }
 		}
 		$morehtmlref.='</div>';
-	
+
 		$object->totalpaye = $totalpaye;   // To give a chance to dol_banner_tab to use already paid amount to show correct status
-	
-		dol_banner_tab($object, 'ref', $linkback, 1, 'facnumber', 'ref', $morehtmlref, '', 0, '', '', 1);
-		
+
+		dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref, '', 0, '', '', 1);
+
 		dol_fiche_end();
 
 		print '<br>';
 
 		// Contacts lines (modules that overwrite templates must declare this into descriptor)
-		$dirtpls=array_merge($conf->modules_parts['tpl'],array('/core/tpl'));
+		$dirtpls=array_merge($conf->modules_parts['tpl'], array('/core/tpl'));
 		foreach($dirtpls as $reldir)
 		{
 		    $res=@include dol_buildpath($reldir.'/contacts.tpl.php');
 		    if ($res) break;
 		}
-
 	}
 	else
 	{
@@ -215,6 +214,6 @@ if ($id > 0 || ! empty($ref))
 	}
 }
 
-
+// End of page
 llxFooter();
 $db->close();

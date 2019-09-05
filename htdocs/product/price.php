@@ -2,15 +2,17 @@
 /* Copyright (C) 2001-2007	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2004-2014	Laurent Destailleur		<eldy@users.sourceforge.net>
  * Copyright (C) 2005		Eric Seigne				<eric.seigne@ryxeo.com>
- * Copyright (C) 2005-2015	Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2017	Regis Houssin			<regis.houssin@inodbox.com>
  * Copyright (C) 2006		Andre Cianfarani		<acianfa@free.fr>
  * Copyright (C) 2014		Florian Henry			<florian.henry@open-concept.pro>
- * Copyright (C) 2014-2016	Juanjo Menent			<jmenent@2byte.es>
- * Copyright (C) 2014-2015 	Philippe Grand 		    <philippe.grand@atoo-net.com>
+ * Copyright (C) 2014-2018	Juanjo Menent			<jmenent@2byte.es>
+ * Copyright (C) 2014-2019 	Philippe Grand 		    <philippe.grand@atoo-net.com>
  * Copyright (C) 2014		Ion agorria				<ion@agorria.com>
- * Copyright (C) 2015		Alexandre Spangaro		<aspangaro.dolibarr@gmail.com>
+ * Copyright (C) 2015		Alexandre Spangaro		<aspangaro@open-dsi.fr>
  * Copyright (C) 2015		Marcos García			<marcosgdf@gmail.com>
  * Copyright (C) 2016		Ferran Marcet			<fmarcet@2byte.es>
+ * Copyright (C) 2018       Frédéric France         <frederic.france@netlogic.fr>
+ * Copyright (C) 2018		Nicolas ZABOURI			<info@inovea-conseil.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,9 +46,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
 	$prodcustprice = new Productcustomerprice($db);
 }
 
-$langs->load("products");
-$langs->load("bills");
-$langs->load("companies");
+// Load translation files required by the page
+$langs->loadLangs(array('products', 'bills', 'companies', 'other'));
 
 $mesg=''; $error=0; $errors=array();
 
@@ -71,7 +72,7 @@ if ($id > 0 || ! empty($ref))
 }
 
 // Clean param
-if (! empty($conf->global->PRODUIT_MULTIPRICES) && empty($conf->global->PRODUIT_MULTIPRICES_LIMIT)) $conf->global->PRODUIT_MULTIPRICES_LIMIT = 5;
+if ((! empty($conf->global->PRODUIT_MULTIPRICES)  || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) && empty($conf->global->PRODUIT_MULTIPRICES_LIMIT)) $conf->global->PRODUIT_MULTIPRICES_LIMIT = 5;
 
 // Initialize technical object to manage hooks of page. Note that conf->hooks_modules contains array of hook context
 $hookmanager->initHooks(array('productpricecard','globalcard'));
@@ -84,12 +85,12 @@ $hookmanager->initHooks(array('productpricecard','globalcard'));
 if ($cancel) $action='';
 
 $parameters=array('id'=>$id, 'ref'=>$ref);
-$reshook=$hookmanager->executeHooks('doActions',$parameters,$object,$action);    // Note that $action and $object may have been modified by some hooks
+$reshook=$hookmanager->executeHooks('doActions', $parameters, $object, $action);    // Note that $action and $object may have been modified by some hooks
 if ($reshook < 0) setEventMessages($hookmanager->error, $hookmanager->errors, 'errors');
 
 if (empty($reshook))
 {
-    if (GETPOST('button_removefilter_x','alpha') || GETPOST('button_removefilter.x','alpha') || GETPOST('button_removefilter','alpha')) // All tests are required to be compatible with all browsers
+    if (GETPOST('button_removefilter_x', 'alpha') || GETPOST('button_removefilter.x', 'alpha') || GETPOST('button_removefilter', 'alpha')) // All tests are required to be compatible with all browsers
     {
         $search_soc = '';
     }
@@ -98,7 +99,7 @@ if (empty($reshook))
     {
         require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
         $keyforlabel = 'PRODUIT_MULTIPRICES_LABEL'.GETPOST('pricelevel');
-        dolibarr_set_const($db, $keyforlabel, GETPOST('labelsellingprice','alpha'), 'chaine', 0, '', $conf->entity);
+        dolibarr_set_const($db, $keyforlabel, GETPOST('labelsellingprice', 'alpha'), 'chaine', 0, '', $conf->entity);
         $action = '';
     }
 
@@ -152,7 +153,7 @@ if (empty($reshook))
 	    $db->begin();
 
 	    $resql = $object->update($object->id, $user);
-	    if (! $resql)
+	    if ($resql <= 0)
 	    {
 	        $error++;
 	        setEventMessages($object->error, $object->errors, 'errors');
@@ -201,7 +202,7 @@ if (empty($reshook))
 		}
 
 		// Multiprices
-		if (! $error && ! empty($conf->global->PRODUIT_MULTIPRICES)) {
+		if (! $error && (! empty($conf->global->PRODUIT_MULTIPRICES) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))) {
 
 			$newprice = GETPOST('price', 'array');
 			$newprice_min = GETPOST('price_min', 'array');
@@ -315,8 +316,8 @@ if (empty($reshook))
 		            // If spain, we don't use the localtax found into tax record in database with same code, but using the get_localtax rule
 		            if (in_array($mysoc->country_code, array('ES')))
 		            {
-    		            $localtax1 = get_localtax($tva_tx,1);
-	   	                $localtax2 = get_localtax($tva_tx,2);
+    		            $localtax1 = get_localtax($tva_tx, 1);
+	   	                $localtax2 = get_localtax($tva_tx, 2);
 		            }
 		        }
 		    }
@@ -351,7 +352,10 @@ if (empty($reshook))
 					break;
 				}
 
-				$res = $object->updatePrice($newprice, $val['price_base_type'], $user, $val['vat_tx'], $newprice_min, $key, $val['npr'], $psq, 0, $val['localtaxes_array'], $val['default_vat_code']);
+				if($object->multiprices[$key]!=$newprice || $object->multiprices_min[$key]!=$newprice_min || $object->multiprices_base_type[$key]!=$val['price_base_type'])
+       				$res = $object->updatePrice($newprice, $val['price_base_type'], $user, $val['vat_tx'], $newprice_min, $key, $val['npr'], $psq, 0, $val['localtaxes_array'], $val['default_vat_code']);
+				else $res=0;
+
 
 				if ($res < 0) {
 					$error ++;
@@ -379,47 +383,50 @@ if (empty($reshook))
 
 	if ($action == 'delete' && $user->rights->produit->supprimer)
 	{
-		$result = $object->log_price_delete($user, $_GET ["lineid"]);
+		$result = $object->log_price_delete($user, GETPOST('lineid', 'int'));
 		if ($result < 0) {
 			setEventMessages($object->error, $object->errors, 'errors');
 		}
 	}
 
-	/**
-	 * ***************************************************
-	 * Price by quantity
-	 * ***************************************************
-	 */
-	if ($action == 'activate_price_by_qty') { // Activating product price by quantity add a new price, specified as by quantity
-
-		$level = GETPOST('level');
-
+	// Set Price by quantity
+	if ($action == 'activate_price_by_qty')
+	{
+		// Activating product price by quantity add a new price line with price_by_qty set to 1
+		$level = GETPOST('level', 'int');
 		$object->updatePrice(0, $object->price_base_type, $user, $object->tva_tx, 0, $level, $object->tva_npr, 1);
+	}
+	// Unset Price by quantity
+	if ($action == 'disable_price_by_qty')
+	{
+		// Disabling product price by quantity add a new price line with price_by_qty set to 0
+		$level = GETPOST('level', 'int');
+		$object->updatePrice(0, $object->price_base_type, $user, $object->tva_tx, 0, $level, $object->tva_npr, 0);
 	}
 
 	if ($action == 'edit_price_by_qty')
 	{ // Edition d'un prix par quantité
-		$rowid = GETPOST('rowid');
+		$rowid = GETPOST('rowid', 'int');
 	}
 
+	// Add or update price by quantity
 	if ($action == 'update_price_by_qty')
-	{ // Ajout / Mise à jour d'un prix par quantité
-
+	{
 		// Récupération des variables
-		$rowid = GETPOST('rowid');
-		$priceid = GETPOST('priceid');
-		$newprice = price2num(GETPOST("price"), 'MU');
+		$rowid = GETPOST('rowid', 'int');
+		$priceid = GETPOST('priceid', 'int');
+		$newprice = price2num(GETPOST("price", 'alpha'), 'MU');
 		// $newminprice=price2num(GETPOST("price_min"),'MU'); // TODO : Add min price management
-		$quantity = GETPOST('quantity');
-		$remise_percent = price2num(GETPOST('remise_percent'));
+		$quantity = GETPOST('quantity', 'int');
+		$remise_percent = price2num(GETPOST('remise_percent', 'alpha'));
 		$remise = 0; // TODO : allow discount by amount when available on documents
 
 		if (empty($quantity)) {
-			$error ++;
+			$error++;
 			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Qty")), null, 'errors');
 		}
 		if (empty($newprice)) {
-			$error ++;
+			$error++;
 			setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Price")), null, 'errors');
 		}
 		if (! $error) {
@@ -439,36 +446,44 @@ if (empty($reshook))
 				$sql .= " quantity=" . $quantity . ",";
 				$sql .= " remise_percent=" . $remise_percent . ",";
 				$sql .= " remise=" . $remise;
-				$sql .= " WHERE rowid = " . GETPOST('rowid');
+				$sql .= " WHERE rowid = " . $rowid;
 
 				$result = $db->query($sql);
+				if (! $result) dol_print_error($db);
 			} else {
 				$sql = "INSERT INTO " . MAIN_DB_PREFIX . "product_price_by_qty (fk_product_price,price,unitprice,quantity,remise_percent,remise) values (";
 				$sql .= $priceid . ',' . $price . ',' . $unitPrice . ',' . $quantity . ',' . $remise_percent . ',' . $remise . ')';
 
 				$result = $db->query($sql);
+				if (! $result) dol_print_error($db);
 			}
 		}
 	}
 
 	if ($action == 'delete_price_by_qty')
 	{
-		$rowid = GETPOST('rowid');
+		$rowid = GETPOST('rowid', 'int');
+		if (!empty($rowid)) {
+			$sql = "DELETE FROM " . MAIN_DB_PREFIX . "product_price_by_qty";
+			$sql .= " WHERE rowid = " . $rowid;
 
-		$sql = "DELETE FROM " . MAIN_DB_PREFIX . "product_price_by_qty";
-		$sql .= " WHERE rowid = " . GETPOST('rowid');
-
-		$result = $db->query($sql);
+			$result = $db->query($sql);
+		} else {
+			setEventMessages(('delete_price_by_qty'.$langs->transnoentities(MissingIds)), null, 'errors');
+		}
 	}
 
 	if ($action == 'delete_all_price_by_qty')
 	{
-		$priceid = GETPOST('priceid');
-
+		$priceid = GETPOST('priceid', 'int');
+		if (!empty($rowid)) {
 		$sql = "DELETE FROM " . MAIN_DB_PREFIX . "product_price_by_qty";
 		$sql .= " WHERE fk_product_price = " . $priceid;
 
 		$result = $db->query($sql);
+		} else {
+			setEventMessages(('delete_price_by_qty'.$langs->transnoentities(MissingIds)), null, 'errors');
+		}
 	}
 
 	/**
@@ -480,7 +495,7 @@ if (empty($reshook))
 
 		$maxpricesupplier = $object->min_recommended_price();
 
-		$update_child_soc = GETPOST('updatechildprice');
+		$update_child_soc = GETPOST('updatechildprice', 'int');
 
 		// add price by customer
 		$prodcustprice->fk_soc = GETPOST('socid', 'int');
@@ -489,7 +504,7 @@ if (empty($reshook))
 		$prodcustprice->price_min = price2num(GETPOST("price_min"), 'MU');
 		$prodcustprice->price_base_type = GETPOST("price_base_type", 'alpha');
 
-		$tva_tx_txt = GETPOST("tva_tx",'alpha');
+		$tva_tx_txt = GETPOST("tva_tx", 'alpha');
 
 		$tva_tx = $tva_tx_txt;
 		$vatratecode = '';
@@ -536,14 +551,14 @@ if (empty($reshook))
 		if (! ($prodcustprice->fk_soc > 0))
 		{
 		    $langs->load("errors");
-		    setEventMessages($langs->trans("ErrorFieldRequired",$langs->transnoentitiesnoconv("ThirdParty")), null, 'errors');
+		    setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("ThirdParty")), null, 'errors');
 		    $error++;
 		    $action='add_customer_price';
 		}
 		if (! empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE) && $prodcustprice->price_min < $maxpricesupplier)
 		{
 		    $langs->load("errors");
-			setEventMessages($langs->trans("MinimumPriceLimit",price($maxpricesupplier,0,'',1,-1,-1,'auto')), null, 'errors');
+			setEventMessages($langs->trans("MinimumPriceLimit", price($maxpricesupplier, 0, '', 1, -1, -1, 'auto')), null, 'errors');
 			$error++;
 			$action='add_customer_price';
 		}
@@ -580,7 +595,7 @@ if (empty($reshook))
 	{
 		$maxpricesupplier = $object->min_recommended_price();
 
-		$update_child_soc = GETPOST('updatechildprice');
+		$update_child_soc = GETPOST('updatechildprice', 'int');
 
 		$prodcustprice->fetch(GETPOST('lineid', 'int'));
 
@@ -635,7 +650,7 @@ if (empty($reshook))
 
 		if ($prodcustprice->price_min < $maxpricesupplier && !empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE))
 		{
-			setEventMessages($langs->trans("MinimumPriceLimit",price($maxpricesupplier,0,'',1,-1,-1,'auto')), null, 'errors');
+			setEventMessages($langs->trans("MinimumPriceLimit", price($maxpricesupplier, 0, '', 1, -1, -1, 'auto')), null, 'errors');
 			$error++;
 			$action='update_customer_price';
 		}
@@ -670,7 +685,7 @@ if (! empty($id) || ! empty($ref))
 
 $title = $langs->trans('ProductServiceCard');
 $helpurl = '';
-$shortlabel = dol_trunc($object->label,16);
+$shortlabel = dol_trunc($object->label, 16);
 if (GETPOST("type") == '0' || ($object->type == Product::TYPE_PRODUCT))
 {
 	$title = $langs->trans('Product')." ". $shortlabel ." - ".$langs->trans('SellingPrices');
@@ -690,11 +705,11 @@ $picto = ($object->type == Product::TYPE_SERVICE ? 'service' : 'product');
 
 dol_fiche_head($head, 'price', $titre, -1, $picto);
 
-$linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php">'.$langs->trans("BackToList").'</a>';
+$linkback = '<a href="'.DOL_URL_ROOT.'/product/list.php?restore_lastsearch_values=1">'.$langs->trans("BackToList").'</a>';
 $object->next_prev_filter=" fk_product_type = ".$object->type;
 
 $shownav = 1;
-if ($user->societe_id && ! in_array('product', explode(',',$conf->global->MAIN_MODULES_FOR_EXTERNAL))) $shownav=0;
+if ($user->societe_id && ! in_array('product', explode(',', $conf->global->MAIN_MODULES_FOR_EXTERNAL))) $shownav=0;
 
 dol_banner_tab($object, 'ref', $linkback, $shownav, 'ref');
 
@@ -704,8 +719,8 @@ print '<div class="fichecenter">';
 print '<div class="underbanner clearboth"></div>';
 print '<table class="border tableforfield" width="100%">';
 
-// MultiPrix
-if (! empty($conf->global->PRODUIT_MULTIPRICES))
+// Price per customer segment/level
+if (! empty($conf->global->PRODUIT_MULTIPRICES) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))
 {
 	// Price and min price are variable (depends on level of company).
 	if (! empty($socid))
@@ -744,7 +759,7 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 		if (! empty($conf->global->PRODUIT_MULTIPRICES_USE_VAT_PER_LEVEL))  // using this option is a bug. kept for backward compatibility
 		{
     	   // TVA
-	       print '<tr><td>' . $langs->trans("VATRate") . '</td><td colspan="2">';
+	       print '<tr><td>' . $langs->trans("DefaultTaxRate") . '</td><td colspan="2">';
 
 	       $positiverates='';
 	       if (price2num($object->multiprices_tva_tx[$soc->price_level])) $positiverates.=($positiverates?'/':'').price2num($object->multiprices_tva_tx[$soc->price_level]);
@@ -758,7 +773,7 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 		else
 		{
         	// TVA
-        	print '<tr><td>' . $langs->trans("VATRate") . '</td><td>';
+        	print '<tr><td>' . $langs->trans("DefaultTaxRate") . '</td><td>';
 
         	$positiverates='';
         	if (price2num($object->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($object->tva_tx);
@@ -774,21 +789,20 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
         	else print vatrate($object->tva_tx . ($object->tva_npr ? '*' : ''), true);*/
         	print '</td></tr>';
 		}
-
 	}
 	else
 	{
 		if (! empty($conf->global->PRODUIT_MULTIPRICES_USE_VAT_PER_LEVEL))  // using this option is a bug. kept for backward compatibility
 		{
     	   // We show only vat for level 1
-	       print '<tr><td class="titlefield">' . $langs->trans("VATRate") . '</td>';
+	       print '<tr><td class="titlefield">' . $langs->trans("DefaultTaxRate") . '</td>';
 	       print '<td colspan="2">' . vatrate($object->multiprices_tva_tx[1], true) . '</td>';
 	       print '</tr>';
 		}
 		else
 		{
             // TVA
-	        print '<tr><td class="titlefield">' . $langs->trans("VATRate") . '</td><td>';
+	        print '<tr><td class="titlefield">' . $langs->trans("DefaultTaxRate") . '</td><td>';
 
 	        $positiverates='';
 	        if (price2num($object->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($object->tva_tx);
@@ -811,7 +825,7 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 	    print '<table class="noborder tableforfield" width="100%">';
 		print '<tr class="liste_titre"><td>';
 		print $langs->trans("PriceLevel");
-		if ($user->admin) print ' <a href="'.$_SERVER["PHP_SELF"].'?action=editlabelsellingprice&amp;pricelevel='.$i.'&amp;id='.$object->id.'">'.img_edit($langs->trans('EditSellingPriceLabel'),0).'</a>';
+		if ($user->admin) print ' <a href="'.$_SERVER["PHP_SELF"].'?action=editlabelsellingprice&amp;pricelevel='.$i.'&amp;id='.$object->id.'">'.img_edit($langs->trans('EditSellingPriceLabel'), 0).'</a>';
 		print '</td>';
 		print '<td style="text-align: right">'.$langs->trans("SellingPrice").'</td>';
 		print '<td style="text-align: right">'.$langs->trans("MinPrice").'</td>';
@@ -868,19 +882,20 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 			print '</td></tr>';
 
 			// Price by quantity
-			if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY))      // TODO Fix the form included into a tr instead of a td
+			if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))      // TODO Fix the form included into a tr instead of a td
 			{
 				print '<tr><td>' . $langs->trans("PriceByQuantity") . ' ' . $i;
-				print '</td><td>';
+			    if (! empty($conf->global->$keyforlabel)) print ' - '.$langs->trans($conf->global->$keyforlabel);
+				print '</td><td colspan="2">';
 
 				if ($object->prices_by_qty[$i] == 1) {
 					print '<table width="50%" class="border" summary="List of quantities">';
 
 					print '<tr class="liste_titre">';
 					print '<td>' . $langs->trans("PriceByQuantityRange") . ' ' . $i . '</td>';
-					print '<td align="right">' . $langs->trans("HT") . '</td>';
-					print '<td align="right">' . $langs->trans("UnitPrice") . '</td>';
-					print '<td align="right">' . $langs->trans("Discount") . '</td>';
+					print '<td class="right">' . $langs->trans("HT") . '</td>';
+					print '<td class="right">' . $langs->trans("UnitPrice") . '</td>';
+					print '<td class="right">' . $langs->trans("Discount") . '</td>';
 					print '<td>&nbsp;</td>';
 					print '</tr>';
 					foreach ($object->prices_by_qty_list[$i] as $ii => $prices)
@@ -892,19 +907,18 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 							print '<input type="hidden" value="' . $prices['rowid'] . '" name="rowid">';
 							print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
 							print '<td><input size="5" type="text" value="' . $prices['quantity'] . '" name="quantity"></td>';
-							print '<td align="right" colspan="2"><input size="10" type="text" value="' . price2num($prices['price'], 'MU') . '" name="price">&nbsp;' . $object->price_base_type . '</td>';
-							// print '<td align="right">&nbsp;</td>';
-							print '<td align="right"><input size="5" type="text" value="' . $prices['remise_percent'] . '" name="remise_percent">&nbsp;%</td>';
-							print '<td align="center"><input type="submit" value="' . $langs->trans("Modify") . '" class="button"></td>';
+							print '<td class="right" colspan="2"><input size="10" type="text" value="' . price2num($prices['price'], 'MU') . '" name="price">&nbsp;' . $object->price_base_type . '</td>';
+							print '<td class="right"><input size="5" type="text" value="' . $prices['remise_percent'] . '" name="remise_percent">&nbsp;%</td>';
+							print '<td class="center"><input type="submit" value="' . $langs->trans("Modify") . '" class="button"></td>';
 							print '</tr>';
 							print '</form>';
 						} else {
 							print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
 							print '<td>' . $prices['quantity'] . '</td>';
-							print '<td align="right">' . price($prices['price']) . '</td>';
-							print '<td align="right">' . price($prices['unitprice']) . '</td>';
-							print '<td align="right">' . price($prices['remise_percent']) . ' %</td>';
-							print '<td align="center">';
+							print '<td class="right">' . price($prices['price']) . '</td>';
+							print '<td class="right">' . price($prices['unitprice']) . '</td>';
+							print '<td class="right">' . price($prices['remise_percent']) . ' %</td>';
+							print '<td class="center">';
 							if (($user->rights->produit->creer || $user->rights->service->creer)) {
 								print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=edit_price_by_qty&amp;rowid=' . $prices["rowid"] . '">';
 								print img_edit() . '</a>';
@@ -920,22 +934,23 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 					if ($action != 'edit_price_by_qty' && ($user->rights->produit->creer || $user->rights->service->creer)) {
 						print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';
 						print '<input type="hidden" name="action" value="update_price_by_qty">';
-						print '<input type="hidden" name="priceid" value="' . $object->prices_by_qty_id[$i] . '">';
-						print '<input type="hidden" value="0" name="rowid">';
+						print '<input type="hidden" name="priceid" value="' . $object->prices_by_qty_id[$i] . '">';	// id in product_price
+						print '<input type="hidden" value="0" name="rowid">';										// id in product_price
 						print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
 						print '<td><input size="5" type="text" value="1" name="quantity"></td>';
-						print '<td align="right" colspan="2"><input size="10" type="text" value="0" name="price">&nbsp;' . $object->price_base_type . '</td>';
-						// print '<td align="right">&nbsp;</td>';
-						print '<td align="right"><input size="5" type="text" value="0" name="remise_percent">&nbsp;%</td>';
-						print '<td align="center"><input type="submit" value="' . $langs->trans("Add") . '" class="button"></td>';
+						print '<td class="right" class="nowrap"><input size="10" type="text" value="0" name="price">&nbsp;' . $object->price_base_type . '</td>';
+						print '<td class="right">&nbsp;</td>';
+						print '<td class="right" class="nowrap"><input size="5" type="text" value="0" name="remise_percent">&nbsp;%</td>';
+						print '<td class="center"><input type="submit" value="' . $langs->trans("Add") . '" class="button"></td>';
 						print '</tr>';
 						print '</form>';
 					}
 
 					print '</table>';
+					print '<a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=disable_price_by_qty&level='.$i.'">(' . $langs->trans("DisablePriceByQty").')</a>';
 				} else {
 					print $langs->trans("No");
-					print '&nbsp;<a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=activate_price_by_qty&level=' . $i . '">(' . $langs->trans("Activate") . ')</a>';
+					print '&nbsp; <a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=activate_price_by_qty&level=' . $i . '">(' . $langs->trans("Activate") . ')</a>';
 				}
 				print '</td></tr>';
 			}
@@ -945,7 +960,7 @@ if (! empty($conf->global->PRODUIT_MULTIPRICES))
 else
 {
 	// TVA
-	print '<tr><td class="titlefield">' . $langs->trans("VATRate") . '</td><td>';
+	print '<tr><td class="titlefield">' . $langs->trans("DefaultTaxRate") . '</td><td>';
 
 	$positiverates='';
 	if (price2num($object->tva_tx))       $positiverates.=($positiverates?'/':'').price2num($object->tva_tx);
@@ -980,47 +995,83 @@ else
 	print '</td></tr>';
 
 	// Price by quantity
-	if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY))    // TODO Fix the form inside tr instead of td
+	if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))    // TODO Fix the form inside tr instead of td
 	{
 		print '<tr><td>' . $langs->trans("PriceByQuantity");
-		if ($object->prices_by_qty [0] == 0) {
-			print '&nbsp;<a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=activate_price_by_qty&level=1">' . $langs->trans("Activate");
+		if ($object->prices_by_qty[0] == 0) {
+			print '&nbsp; <a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=activate_price_by_qty&level=1">(' . $langs->trans("Activate").')';
+		}
+		else
+		{
+			print '&nbsp; <a href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=disable_price_by_qty&level=1">(' . $langs->trans("DisablePriceByQty").')';
 		}
 		print '</td><td>';
 
-		if ($object->prices_by_qty [0] == 1) {
+		if ($object->prices_by_qty[0] == 1)
+		{
 			print '<table width="50%" class="border" summary="List of quantities">';
 			print '<tr class="liste_titre">';
-			print '<td>' . $langs->trans("PriceByQuantityRange") . '</td>';
-			print '<td align="right">' . $langs->trans("HT") . '</td>';
-			print '<td align="right">' . $langs->trans("UnitPrice") . '</td>';
-			print '<td align="right">' . $langs->trans("Discount") . '</td>';
+			//print '<td>' . $langs->trans("PriceByQuantityRange") . '</td>';
+			print '<td>' . $langs->trans("Quantity") . '</td>';
+			print '<td class="right">' . $langs->trans("Price") . '</td>';
+			print '<td class="right"></td>';
+			print '<td class="right">' . $langs->trans("UnitPrice") . '</td>';
+			print '<td class="right">' . $langs->trans("Discount") . '</td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
-			foreach ($object->prices_by_qty_list [0] as $ii => $prices)
+			if ($action != 'edit_price_by_qty')
+			{
+				print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';  // FIXME a form into a table is not allowed
+				print '<input type="hidden" name="action" value="update_price_by_qty">';
+				print '<input type="hidden" name="priceid" value="' . $object->prices_by_qty_id[0] . '">';	// id in product_price
+				print '<input type="hidden" value="0" name="rowid">';										// id in product_price_by_qty
+
+				print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
+				print '<td><input size="5" type="text" value="1" name="quantity"></td>';
+				print '<td class="right"><input class="width50 right" type="text" value="0" name="price"></td>';
+				print '<td>';
+				//print $object->price_base_type;
+				print '</td>';
+				print '<td class="right">&nbsp;</td>';
+				print '<td class="right"><input type="text" class="width50 right" value="0" name="remise_percent">&nbsp;%</td>';
+				print '<td class="center"><input type="submit" value="' . $langs->trans("Add") . '" class="button"></td>';
+				print '</tr>';
+
+				print '</form>';
+			}
+			foreach ($object->prices_by_qty_list[0] as $ii => $prices)
 			{
 				if ($action == 'edit_price_by_qty' && $rowid == $prices['rowid'] && ($user->rights->produit->creer || $user->rights->service->creer))
 				{
 					print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';
 					print '<input type="hidden" name="action" value="update_price_by_qty">';
-					print '<input type="hidden" name="priceid" value="' . $object->prices_by_qty_id[0] . '">';
-					print '<input type="hidden" value="' . $prices['rowid'] . '" name="rowid">';
+					print '<input type="hidden" name="priceid" value="' . $object->prices_by_qty_id[0] . '">';	// id in product_price
+					print '<input type="hidden" value="' . $prices['rowid'] . '" name="rowid">';				// id in product_price_by_qty
 					print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
 					print '<td><input size="5" type="text" value="' . $prices['quantity'] . '" name="quantity"></td>';
-					print '<td align="right" colspan="2"><input size="10" type="text" value="' . price2num($prices['price'], 'MU') . '" name="price">&nbsp;' . $object->price_base_type . '</td>';
-					// print '<td align="right">&nbsp;</td>';
-					print '<td align="right"><input size="5" type="text" value="' . $prices['remise_percent'] . '" name="remise_percent">&nbsp;%</td>';
-					print '<td align="center"><input type="submit" value="' . $langs->trans("Modify") . '" class="button"></td>';
+					print '<td class="right"><input class="width50 right" type="text" value="' . price2num($prices['price'], 'MU') . '" name="price"></td>';
+					print '<td class="right">';
+					//print $object->price_base_type;
+					print $prices['price_base_type'];
+					print '</td>';
+					print '<td class="right">&nbsp;</td>';
+					print '<td class="right"><input class="width50 right" type="text" value="' . $prices['remise_percent'] . '" name="remise_percent">&nbsp;%</td>';
+					print '<td class="center"><input type="submit" value="' . $langs->trans("Modify") . '" class="button"></td>';
 					print '</tr>';
 					print '</form>';
 				} else {
 					print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
 					print '<td>' . $prices['quantity'] . '</td>';
-					print '<td align="right">' . price($prices['price']) . '</td>';
-					print '<td align="right">' . price($prices['unitprice']) . '</td>';
-					print '<td align="right">' . price($prices['remise_percent']) . ' %</td>';
-					print '<td align="center">';
-					if (($user->rights->produit->creer || $user->rights->service->creer)) {
+					print '<td class="right">' . price($prices['price']) . '</td>';
+					print '<td class="right">';
+					//print $object->price_base_type;
+					print $prices['price_base_type'];
+					print '</td>';
+					print '<td class="right">' . price($prices['unitprice']) . '</td>';
+					print '<td class="right">' . price($prices['remise_percent']) . ' %</td>';
+					print '<td class="center">';
+					if (($user->rights->produit->creer || $user->rights->service->creer))
+					{
 						print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=edit_price_by_qty&amp;rowid=' . $prices["rowid"] . '">';
 						print img_edit() . '</a>';
 						print '<a href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '&amp;action=delete_price_by_qty&amp;rowid=' . $prices["rowid"] . '">';
@@ -1032,21 +1083,6 @@ else
 					print '</tr>';
 				}
 			}
-			if ($action != 'edit_price_by_qty') {
-				print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';  // FIXME a form into a table is not allowed
-				print '<input type="hidden" name="action" value="update_price_by_qty">';
-				print '<input type="hidden" name="priceid" value="' . $object->prices_by_qty_id [0] . '">';
-				print '<input type="hidden" value="0" name="rowid">';
-				print '<tr class="' . ($ii % 2 == 0 ? 'pair' : 'impair') . '">';
-				print '<td><input size="5" type="text" value="1" name="quantity"></td>';
-				print '<td align="right" colspan="2"><input size="10" type="text" value="0" name="price">&nbsp;' . $object->price_base_type . '</td>';
-				// print '<td align="right">&nbsp;</td>';
-				print '<td align="right"><input size="5" type="text" value="0" name="remise_percent">&nbsp;%</td>';
-				print '<td align="center"><input type="submit" value="' . $langs->trans("Add") . '" class="button"></td>';
-				print '</tr>';
-				print '</form>';
-			}
-
 			print '</table>';
 		} else {
 			print $langs->trans("No");
@@ -1071,34 +1107,38 @@ dol_fiche_end();
 /*                                                                            */
 /* ************************************************************************** */
 
-if (! $action || $action == 'delete' || $action == 'showlog_customer_price' || $action == 'showlog_default_price' || $action == 'add_customer_price')
+if (! $action || $action == 'delete' || $action == 'showlog_customer_price' || $action == 'showlog_default_price' || $action == 'add_customer_price'
+	|| $action == 'activate_price_by_qty' || $action == 'disable_price_by_qty')
 {
 	print "\n" . '<div class="tabsAction">' . "\n";
 
-	if (empty($conf->global->PRODUIT_MULTIPRICES))
-	{
-    	if ($user->rights->produit->creer || $user->rights->service->creer) {
-    		print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=edit_price&amp;id=' . $object->id . '">' . $langs->trans("UpdateDefaultPrice") . '</a></div>';
-    	}
-	}
+    if ($object->isVariant()) {
+		if ($user->rights->produit->creer || $user->rights->service->creer) {
+			print '<div class="inline-block divButAction"><a class="butActionRefused classfortooltip" href="#" title="'.dol_escape_htmltag($langs->trans("NoEditVariants")).'">'.$langs->trans("UpdateDefaultPrice").'</a></div>';
+		}
+	} else {
+		if (empty($conf->global->PRODUIT_MULTIPRICES) && empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) {
+			if ($user->rights->produit->creer || $user->rights->service->creer) {
+				print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=edit_price&amp;id=' . $object->id . '">' . $langs->trans("UpdateDefaultPrice") . '</a></div>';
+			}
+		}
 
-	if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
-	{
-	    if ($user->rights->produit->creer || $user->rights->service->creer) {
-	 		print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?action=add_customer_price&amp;id=' . $object->id . '">' . $langs->trans("AddCustomerPrice") . '</a></div>';
-	  	}
-	}
+		if (!empty($conf->global->PRODUIT_CUSTOMER_PRICES)) {
+			if ($user->rights->produit->creer || $user->rights->service->creer) {
+				print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?action=add_customer_price&amp;id=' . $object->id . '">' . $langs->trans("AddCustomerPrice") . '</a></div>';
+			}
+		}
 
-	if (! empty($conf->global->PRODUIT_MULTIPRICES))
-	{
-	    if ($user->rights->produit->creer || $user->rights->service->creer) {
-    		print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=edit_vat&amp;id=' . $object->id . '">' . $langs->trans("UpdateVAT") . '</a></div>';
-    	}
+		if (!empty($conf->global->PRODUIT_MULTIPRICES) || !empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) {
+			if ($user->rights->produit->creer || $user->rights->service->creer) {
+				print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=edit_vat&amp;id=' . $object->id . '">' . $langs->trans("UpdateVAT") . '</a></div>';
+			}
 
-	    if ($user->rights->produit->creer || $user->rights->service->creer) {
-    		print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=edit_price&amp;id=' . $object->id . '">' . $langs->trans("UpdateLevelPrices") . '</a></div>';
-    	}
-	}
+			if ($user->rights->produit->creer || $user->rights->service->creer) {
+				print '<div class="inline-block divButAction"><a class="butAction" href="' . $_SERVER['PHP_SELF'] . '?action=edit_price&amp;id=' . $object->id . '">' . $langs->trans("UpdateLevelPrices") . '</a></div>';
+			}
+		}
+    }
 
 	print "\n</div>\n";
 }
@@ -1123,7 +1163,7 @@ if ($action == 'edit_vat' && ($user->rights->produit->creer || $user->rights->se
 	print '<table class="border" width="100%">';
 
 	// VAT
-	print '<tr><td>' . $langs->trans("VATRate") . '</td><td>';
+	print '<tr><td>' . $langs->trans("DefaultTaxRate") . '</td><td>';
 	print $form->load_tva("tva_tx", $object->default_vat_code ? $object->tva_tx.' ('.$object->default_vat_code.')' : $object->tva_tx, $mysoc, '', $object->id, $object->tva_npr, $object->type, false, 1);
 	print '</td></tr>';
 
@@ -1144,7 +1184,7 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 {
 	print load_fiche_titre($langs->trans("NewPrice"), '');
 
-	if (empty($conf->global->PRODUIT_MULTIPRICES))
+	if (empty($conf->global->PRODUIT_MULTIPRICES) && empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))
 	{
 	    print '<!-- Edit price -->'."\n";
 		print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';
@@ -1157,7 +1197,7 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 		print '<table class="border" width="100%">';
 
 		// VAT
-		print '<tr><td class="titlefield">' . $langs->trans("VATRate") . '</td><td>';
+		print '<tr><td class="titlefield">' . $langs->trans("DefaultTaxRate") . '</td><td>';
 		print $form->load_tva("tva_tx", $object->default_vat_code ? $object->tva_tx.' ('.$object->default_vat_code.')' : $object->tva_tx, $mysoc, '', $object->id, $object->tva_npr, $object->type, false, 1);
 		print '</td></tr>';
 
@@ -1232,13 +1272,13 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 		}
 		if (! empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE))
 		{
-		    print ' &nbsp; '.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier,0,'',1,-1,-1,'auto')).' '.img_warning().'</td>';
+		    print ' &nbsp; '.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier, 0, '', 1, -1, -1, 'auto')).' '.img_warning().'</td>';
 		}
 		print '</td>';
 		print '</tr>';
 
 		$parameters=array('colspan' => 2);
-		$reshook=$hookmanager->executeHooks('formObjectOptions',$parameters,$object,$action);    // Note that $action and $object may have been modified by hook
+		$reshook=$hookmanager->executeHooks('formObjectOptions', $parameters, $object, $action);    // Note that $action and $object may have been modified by hook
 
 		print '</table>';
 
@@ -1286,7 +1326,7 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 
 		//dol_fiche_head('', '', '', -1);
 
-		if (! empty($conf->global->PRODUIT_MULTIPRICES) && ! empty($conf->global->PRODUIT_MULTIPRICES_ALLOW_AUTOCALC_PRICELEVEL)) {
+		if ((! empty($conf->global->PRODUIT_MULTIPRICES)  || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) && ! empty($conf->global->PRODUIT_MULTIPRICES_ALLOW_AUTOCALC_PRICELEVEL)) {
 			print $langs->trans('UseMultipriceRules'). ' <input type="checkbox" id="usePriceRules" name="usePriceRules" '.($object->price_autogen ? 'checked' : '').'><br><br>';
 		}
 
@@ -1295,7 +1335,7 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 
 		print '<td>'.$langs->trans("PriceLevel").'</td>';
 
-		if (!empty($conf->global->PRODUIT_MULTIPRICES_USE_VAT_PER_LEVEL)) print '<td style="text-align: center">'.$langs->trans("VATRate").'</td>';
+		if (!empty($conf->global->PRODUIT_MULTIPRICES_USE_VAT_PER_LEVEL)) print '<td style="text-align: center">'.$langs->trans("DefaultTaxRate").'</td>';
 		else print '<td></td>';
 
 		print '<td class="center">'.$langs->trans("SellingPrice").'</td>';
@@ -1352,7 +1392,7 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 			}
 			if ( !empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE))
 			{
-				print '<td align="left">'.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier,0,'',1,-1,-1,'auto')).' '.img_warning().'</td>';
+				print '<td class="left">'.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier, 0, '', 1, -1, -1, 'auto')).' '.img_warning().'</td>';
 			}
 			print '</td>';
 
@@ -1370,7 +1410,6 @@ if ($action == 'edit_price' && $object->getRights()->creer)
 		print '&nbsp;&nbsp;&nbsp;';
 		print '<input type="submit" class="button" name="cancel" value="' . $langs->trans("Cancel") . '"></div>';
 		print '</form>';
-
 	}
 }
 
@@ -1404,7 +1443,12 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action=='showlog_default_
 
     		// Il doit au moins y avoir la ligne de prix initial.
     		// On l'ajoute donc pour remettre a niveau (pb vieilles versions)
-    		$object->updatePrice($object->price, $object->price_base_type, $user, $newprice_min);
+    		//$object->updatePrice($object->price, $object->price_base_type, $user, $object->tva_tx, $object->price_min);
+            if (! empty($conf->global->PRODUIT_MULTIPRICES)) {
+            	$object->updatePrice($object->multiprices[1], $object->multiprices_base_type[1], $user, (empty($object->multiprices_tva_tx[1])?0:$object->multiprices_tva_tx[1]), $object->multiprices_min[1], 1);
+            } else {
+                $object->updatePrice($object->price, $object->price_base_type, $user, $object->tva_tx, $object->price_min);
+            }
 
     		$result = $db->query($sql);
     		$num = $db->num_rows($result);
@@ -1416,8 +1460,8 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action=='showlog_default_
     	    // Log of previous customer prices
     	    $backbutton='<a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '">' . $langs->trans("Back") . '</a>';
 
-    		if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) print_barre_liste($langs->trans("DefaultPrice"), 0, $_SERVER["PHP_SELF"], '', '', '', $backbutton, $num, $num, 'title_accountancy.png');
-    		else print_barre_liste($langs->trans("PriceByCustomerLog"), 0, $_SERVER["PHP_SELF"], '', '', '', '', $num, $num, 'title_accountancy.png');
+    		if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) print_barre_liste($langs->trans("DefaultPrice"), 0, $_SERVER["PHP_SELF"], '', '', '', $backbutton, 0, $num, 'title_accountancy.png');
+    		else print_barre_liste($langs->trans("PriceByCustomerLog"), 0, $_SERVER["PHP_SELF"], '', '', '', '', 0, $num, 'title_accountancy.png');
     	    //if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES)) print_barre_liste($langs->trans("DefaultPrice"),'','','','','',$backbutton, 0, 0, 'title_accountancy.png');
     		//else print_barre_liste($langs->trans("PriceByCustomerLog"),'','','','','','', 0, 0, 'title_accountancy.png');
 
@@ -1427,26 +1471,26 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action=='showlog_default_
     		print '<tr class="liste_titre">';
     		print '<td>' . $langs->trans("AppliedPricesFrom") . '</td>';
 
-    		if (! empty($conf->global->PRODUIT_MULTIPRICES)) {
-    			print '<td align="center">' . $langs->trans("PriceLevel") . '</td>';
+    		if (! empty($conf->global->PRODUIT_MULTIPRICES) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) {
+    			print '<td class="center">' . $langs->trans("PriceLevel") . '</td>';
     		}
-    		if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY)) {
-    			print '<td align="center">' . $langs->trans("Type") . '</td>';
+    		if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) {
+    			print '<td class="center">' . $langs->trans("Type") . '</td>';
     		}
 
-    		print '<td align="center">' . $langs->trans("PriceBase") . '</td>';
+    		print '<td class="center">' . $langs->trans("PriceBase") . '</td>';
     		print $conf->global->PRODUIT_MULTIPRICES_USE_VAT_PER_LEVEL;
-    		if (empty($conf->global->PRODUIT_MULTIPRICES)) print '<td align="right">' . $langs->trans("VATRate") . '</td>';
-    		print '<td align="right">' . $langs->trans("HT") . '</td>';
-    		print '<td align="right">' . $langs->trans("TTC") . '</td>';
+    		if (empty($conf->global->PRODUIT_MULTIPRICES) && empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) print '<td class="right">' . $langs->trans("DefaultTaxRate") . '</td>';
+    		print '<td class="right">' . $langs->trans("HT") . '</td>';
+    		print '<td class="right">' . $langs->trans("TTC") . '</td>';
     		if (! empty($conf->dynamicprices->enabled)) {
-    			print '<td align="right">' . $langs->trans("PriceExpressionSelected") . '</td>';
+    			print '<td class="right">' . $langs->trans("PriceExpressionSelected") . '</td>';
     		}
-    		print '<td align="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("HT") . '</td>';
-    		print '<td align="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("TTC") . '</td>';
-    		print '<td align="right">' . $langs->trans("ChangedBy") . '</td>';
+    		print '<td class="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("HT") . '</td>';
+    		print '<td class="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("TTC") . '</td>';
+    		print '<td class="right">' . $langs->trans("ChangedBy") . '</td>';
     		if ($user->rights->produit->supprimer)
-    			print '<td align="right">&nbsp;</td>';
+    			print '<td class="right">&nbsp;</td>';
     		print '</tr>';
 
     		$notfirstlineforlevel=array();
@@ -1461,33 +1505,41 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action=='showlog_default_
     			print "<td>" . dol_print_date($db->jdate($objp->dp), "dayhour") . "</td>";
 
     			// Price level
-    			if (! empty($conf->global->PRODUIT_MULTIPRICES)) {
-    				print '<td align="center">' . $objp->price_level . "</td>";
+    			if (! empty($conf->global->PRODUIT_MULTIPRICES) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES)) {
+    				print '<td class="center">' . $objp->price_level . "</td>";
     			}
     			// Price by quantity
-    			if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY))
+    			if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))
     			{
     				$type = ($objp->price_by_qty == 1) ? 'PriceByQuantity' : 'Standard';
-    				print '<td align="center">' . $langs->trans($type) . "</td>";
+    				print '<td class="center">' . $langs->trans($type) . "</td>";
     			}
 
-    			print '<td align="center">' . $langs->trans($objp->price_base_type) . "</td>";
-    			if (empty($conf->global->PRODUIT_MULTIPRICES))
-    			{
-    			    print '<td align="right">';
+    			print '<td class="center">';
+    			if (empty($objp->price_by_qty)) {
+	    			print $langs->trans($objp->price_base_type);
+    			}
+    			print "</td>";
 
-    			    $positiverates='';
-    			    if (price2num($objp->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($objp->tva_tx);
-    			    if (price2num($objp->localtax1_type)) $positiverates.=($positiverates?'/':'').price2num($objp->localtax1_tx);
-    			    if (price2num($objp->localtax2_type)) $positiverates.=($positiverates?'/':'').price2num($objp->localtax2_tx);
-    			    if (empty($positiverates)) $positiverates='0';
-    			    echo vatrate($positiverates.($objp->default_vat_code?' ('.$objp->default_vat_code.')':''), '%', $objp->tva_npr);
-					/*
-    			    if ($objp->default_vat_code)
-    			    {
-    			        print vatrate($objp->tva_tx, true) . ' ('.$objp->default_vat_code.')';
+    			if (empty($conf->global->PRODUIT_MULTIPRICES) && empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))
+    			{
+    			    print '<td class="right">';
+
+    			    if (empty($objp->price_by_qty)) {
+	    			    $positiverates='';
+	    			    if (price2num($objp->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($objp->tva_tx);
+	    			    if (price2num($objp->localtax1_type)) $positiverates.=($positiverates?'/':'').price2num($objp->localtax1_tx);
+	    			    if (price2num($objp->localtax2_type)) $positiverates.=($positiverates?'/':'').price2num($objp->localtax2_tx);
+	    			    if (empty($positiverates)) $positiverates='0';
+	    			    echo vatrate($positiverates.($objp->default_vat_code?' ('.$objp->default_vat_code.')':''), '%', $objp->tva_npr);
+						/*
+	    			    if ($objp->default_vat_code)
+	    			    {
+	    			        print vatrate($objp->tva_tx, true) . ' ('.$objp->default_vat_code.')';
+	    			    }
+	    			    else print vatrate($objp->tva_tx, true, $objp->recuperableonly);*/
     			    }
-    			    else print vatrate($objp->tva_tx, true, $objp->recuperableonly);*/
+
     			    print "</td>";
     			}
 
@@ -1497,38 +1549,54 @@ if ((empty($conf->global->PRODUIT_CUSTOMER_PRICES) || $action=='showlog_default_
     				$price_expression = new PriceExpression($db);
     				$res = $price_expression->fetch($objp->fk_price_expression);
     				$title = $price_expression->title;
-    				print '<td align="right"></td>';
-    				print '<td align="right"></td>';
-    				print '<td align="right">' . $title . "</td>";
+    				print '<td class="right"></td>';
+    				print '<td class="right"></td>';
+    				print '<td class="right">' . $title . "</td>";
     			}
     			else
     			{
-    				print '<td align="right">' . ($objp->price_base_type != 'TTC' ? price($objp->price) : ''). "</td>";
-    				print '<td align="right">' . ($objp->price_base_type == 'TTC' ? price($objp->price_ttc) : '') . "</td>";
+    				print '<td class="right">';
+    				if (empty($objp->price_by_qty)) {
+    					print ($objp->price_base_type != 'TTC' ? price($objp->price) : '');
+    				}
+    				print "</td>";
+    				print '<td class="right">';
+    				if (empty($objp->price_by_qty)) {
+    					print ($objp->price_base_type == 'TTC' ? price($objp->price_ttc) : '');
+    				}
+    				print "</td>";
     				if (! empty($conf->dynamicprices->enabled)) { //Only if module is enabled
-    					print '<td align="right"></td>';
+    					print '<td class="right"></td>';
     				}
     			}
 
-    			print '<td align="right">' . ($objp->price_base_type != 'TTC' ? price($objp->price_min) : '') . '</td>';
+    			print '<td class="right">';
+    			if (empty($objp->price_by_qty)) {
+    				print ($objp->price_base_type != 'TTC' ? price($objp->price_min) : '');
+    			}
+    			print '</td>';
 
-    			print '<td align="right">' . ($objp->price_base_type == 'TTC' ? price($objp->price_min_ttc) : '') . '</td>';
+    			print '<td class="right">';
+    			if (empty($objp->price_by_qty)) {
+    				print ($objp->price_base_type == 'TTC' ? price($objp->price_min_ttc) : '');
+    			}
+    			print '</td>';
 
     			// User
-    			print '<td align="right"><a href="' . DOL_URL_ROOT . '/user/card.php?id=' . $objp->user_id . '">' . img_object($langs->trans("ShowUser"), 'user') . ' ' . $objp->login . '</a></td>';
+    			print '<td class="right"><a href="' . DOL_URL_ROOT . '/user/card.php?id=' . $objp->user_id . '">' . img_object($langs->trans("ShowUser"), 'user') . ' ' . $objp->login . '</a></td>';
 
     			// Action
     			if ($user->rights->produit->supprimer)
     			{
     			    $candelete=0;
-    			    if (! empty($conf->global->PRODUIT_MULTIPRICES))
+    			    if (! empty($conf->global->PRODUIT_MULTIPRICES) || ! empty($conf->global->PRODUIT_CUSTOMER_PRICES_BY_QTY_MULTIPRICES))
     			    {
     			        if (empty($notfirstlineforlevel[$objp->price_level])) $notfirstlineforlevel[$objp->price_level]=1;
     			        else $candelete=1;
     			    }
     			    elseif ($i > 0) $candelete=1;
 
-    				print '<td align="right">';
+    				print '<td class="right">';
     				if ($candelete)
     				{
     					print '<a href="' . $_SERVER["PHP_SELF"] . '?action=delete&amp;id=' . $object->id . '&amp;lineid=' . $objp->rowid . '">';
@@ -1563,10 +1631,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 
 	$sortfield = GETPOST("sortfield", 'alpha');
 	$sortorder = GETPOST("sortorder", 'alpha');
-	$page = GETPOST("page", 'int');
-	if ($page == - 1) {
-		$page = 0;
-	}
+	$page = (GETPOST("page", 'int')?GETPOST("page", 'int'):0);
+	if (empty($page) || $page == -1) { $page = 0; }     // If $page is not defined, or '' or -1
 	$offset = $conf->liste_limit * $page;
 	$pageprev = $page - 1;
 	$pagenext = $page + 1;
@@ -1600,12 +1666,12 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		print '<tr>';
 		print '<td class="fieldrequired">' . $langs->trans('ThirdParty') . '</td>';
 		print '<td>';
-		print $form->select_company('', 'socid', 's.client in (1,2,3)', 'SelectThirdParty', 0, 0, array(), 0, 'minwidth300');
+		print $form->select_company('', 'socid', 's.client IN (1,2,3)', 'SelectThirdParty', 0, 0, array(), 0, 'minwidth300');
 		print '</td>';
 		print '</tr>';
 
 		// VAT
-		print '<tr><td class="fieldrequired">' . $langs->trans("VATRate") . '</td><td>';
+		print '<tr><td class="fieldrequired">' . $langs->trans("DefaultTaxRate") . '</td><td>';
 		print $form->load_tva("tva_tx", $object->default_vat_code ? $object->tva_tx.' ('.$object->default_vat_code.')' : $object->tva_tx, $mysoc, '', $object->id, $object->tva_npr, $object->type, false, 1);
 		print '</td></tr>';
 
@@ -1641,24 +1707,22 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		}
 		if ( !empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE))
 		{
-			print '<td align="left">'.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier,0,'',1,-1,-1,'auto')).' '.img_warning().'</td>';
+			print '<td class="left">'.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier, 0, '', 1, -1, -1, 'auto')).' '.img_warning().'</td>';
 		}
 		print '</td></tr>';
-
-		// Update all child soc
-		print '<tr><td width="15%">';
-		print $langs->trans('ForceUpdateChildPriceSoc');
-		print '</td>';
-		print '<td>';
-		print '<input type="checkbox" name="updatechildprice" value="1">';
-		print '</td>';
-		print '</tr>';
 
 		print '</table>';
 
 		dol_fiche_end();
 
 		print '<div class="center">';
+
+				// Update all child soc
+		print '<div class="marginbottomonly">';
+		print '<input type="checkbox" name="updatechildprice" value="1"> ';
+		print $langs->trans('ForceUpdateChildPriceSoc');
+		print '</div>';
+		
 		print '<input type="submit" class="button" value="' . $langs->trans("Save") . '">';
 		print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 		print '<input type="submit" class="button" name="cancel" value="' . $langs->trans("Cancel") . '">';
@@ -1694,7 +1758,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		print '</tr>';
 
 		// VAT
-		print '<tr><td>' . $langs->trans("VATRate") . '</td><td colspan="2">';
+		print '<tr><td>' . $langs->trans("DefaultTaxRate") . '</td><td colspan="2">';
 		print $form->load_tva("tva_tx", $prodcustprice->default_vat_code ? $prodcustprice->tva_tx.' ('.$prodcustprice->default_vat_code.')' : $prodcustprice->tva_tx, $mysoc, '', $object->id, $prodcustprice->recuperableonly, $object->type, false, 1);
 		print '</td></tr>';
 
@@ -1732,16 +1796,14 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		print '</td>';
 		if ( !empty($conf->global->PRODUCT_MINIMUM_RECOMMENDED_PRICE))
 		{
-			print '<td align="left">'.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier,0,'',1,-1,-1,'auto')).' '.img_warning().'</td>';
+			print '<td class="left">'.$langs->trans("MinimumRecommendedPrice", price($maxpricesupplier, 0, '', 1, -1, -1, 'auto')).' '.img_warning().'</td>';
 		}
 		print '</tr>';
 
 		// Update all child soc
 		print '<tr><td>';
-		print $langs->trans('ForceUpdateChildPriceSoc');
 		print '</td>';
 		print '<td>';
-		print '<input type="checkbox" name="updatechildprice" value="1">';
 		print '</td>';
 		print '</tr>';
 
@@ -1750,6 +1812,11 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		dol_fiche_end();
 
 		print '<div class="center">';
+		print '<div class="marginbottomonly">';
+		print '<input type="checkbox" name="updatechildprice" value="1"> ';
+		print $langs->trans('ForceUpdateChildPriceSoc');
+		print "</div>";
+		
 		print '<input type="submit" class="button" value="' . $langs->trans("Save") . '">';
 		print '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
 		print '<input type="submit" class="button" name="cancel" value="' . $langs->trans("Cancel") . '">';
@@ -1760,7 +1827,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 	elseif ($action == 'showlog_customer_price')
 	{
 		// List of all log of prices by customers
-		print '<!-- list of all lof of prices per customer -->'."\n";
+		print '<!-- list of all log of prices per customer -->'."\n";
 
 	    $filter = array('t.fk_product' => $object->id,'t.fk_soc' => GETPOST('socid', 'int'));
 
@@ -1783,9 +1850,9 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		$title=$langs->trans('PriceByCustomerLog');
 		$title.=' - '.$staticsoc->getNomUrl(1);
 
-		$backbutton='<a class="butAction" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '">' . $langs->trans("Back") . '</a>';
+		$backbutton='<a class="justalink" href="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '">' . $langs->trans("Back") . '</a>';
 
-		print_barre_liste($title, $page, $_SERVEUR['PHP_SELF'], $option, $sortfield, $sortorder, $backbutton, count($prodcustprice->lines), $nbtotalofrecords, 'title_accountancy.png');
+		print_barre_liste($title, $page, $_SERVER['PHP_SELF'], $option, $sortfield, $sortorder, $backbutton, count($prodcustprice->lines), $nbtotalofrecords, 'title_accountancy.png');
 
 		if (count($prodcustprice->lines) > 0)
 		{
@@ -1797,21 +1864,21 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 			print '<tr class="liste_titre">';
 			print '<td>' . $langs->trans("ThirdParty") . '</td>';
 			print '<td>' . $langs->trans("AppliedPricesFrom") . '</td>';
-			print '<td align="center">' . $langs->trans("PriceBase") . '</td>';
-			print '<td align="right">' . $langs->trans("VATRate") . '</td>';
-			print '<td align="right">' . $langs->trans("HT") . '</td>';
+			print '<td class="center">' . $langs->trans("PriceBase") . '</td>';
+			print '<td class="right">' . $langs->trans("DefaultTaxRate") . '</td>';
+			print '<td class="right">' . $langs->trans("HT") . '</td>';
 			if ($mysoc->localtax1_assuj == "1" || $mysoc->localtax2_assuj == "1")
 			{
-				//print '<td align="right">' . $langs->trans("INCVATONLY") . '</td>';
-				print '<td align="right">' . $langs->trans("INCT") . '</td>';
+				//print '<td class="right">' . $langs->trans("INCVATONLY") . '</td>';
+				print '<td class="right">' . $langs->trans("INCT") . '</td>';
 			}
 			else
 			{
-				print '<td align="right">' . $langs->trans("TTC") . '</td>';
+				print '<td class="right">' . $langs->trans("TTC") . '</td>';
 			}
-			print '<td align="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("HT") . '</td>';
-			print '<td align="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("TTC") . '</td>';
-			print '<td align="right">' . $langs->trans("ChangedBy") . '</td>';
+			print '<td class="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("HT") . '</td>';
+			print '<td class="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("TTC") . '</td>';
+			print '<td class="right">' . $langs->trans("ChangedBy") . '</td>';
 			print '<td>&nbsp;</td>';
 			print '</tr>';
 
@@ -1848,8 +1915,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 
 				print "<td>" . $staticsoc->getNomUrl(1) . "</td>";
 				print "<td>" . dol_print_date($line->datec, "dayhour") . "</td>";
-    		    print '<td align="center">' . $langs->trans($line->price_base_type) . "</td>";
-				print '<td align="right">';
+    		    print '<td class="center">' . $langs->trans($line->price_base_type) . "</td>";
+				print '<td class="right">';
 
 				$positiverates='';
 				if (price2num($line->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($line->tva_tx);
@@ -1861,25 +1928,25 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 
 				//. vatrate($tva_tx, true, $line->recuperableonly) .
 				print "</td>";
-				print '<td align="right">' . price($line->price) . "</td>";
+				print '<td class="right">' . price($line->price) . "</td>";
 
 				if ($mysoc->localtax1_assuj == "1" || $mysoc->localtax2_assuj == "1")
 				{
-					//print '<td align="right">' . price($line->price_ttc) . "</td>";
-					print '<td align="right">' . price($resultarray[2]) . '</td>';
+					//print '<td class="right">' . price($line->price_ttc) . "</td>";
+					print '<td class="right">' . price($resultarray[2]) . '</td>';
 				}
 				else
 				{
-					print '<td align="right">' . price($line->price_ttc) . "</td>";
+					print '<td class="right">' . price($line->price_ttc) . "</td>";
 				}
 
-				print '<td align="right">' . price($line->price_min) . '</td>';
-				print '<td align="right">' . price($line->price_min_ttc) . '</td>';
+				print '<td class="right">' . price($line->price_min) . '</td>';
+				print '<td class="right">' . price($line->price_min_ttc) . '</td>';
 
 				// User
 				$userstatic = new User($db);
 				$userstatic->fetch($line->fk_user);
-				print '<td align="right">';
+				print '<td class="right">';
 				print $userstatic->getLoginUrl(1);
 				print '</td>';
 				print '</tr>';
@@ -1889,7 +1956,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 			print $langs->trans('None');
 		}
 	}
-	else if ($action != 'showlog_default_price' && $action != 'edit_price')
+	elseif ($action != 'showlog_default_price' && $action != 'edit_price')
 	{
 		// List of all prices by customers
         print '<!-- list of all prices per customer -->'."\n";
@@ -1907,7 +1974,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 
 		$option = '&search_soc=' . $search_soc . '&id=' . $object->id;
 
-		print_barre_liste($langs->trans('PriceByCustomer'), $page, $_SERVEUR ['PHP_SELF'], $option, $sortfield, $sortorder, '', count($prodcustprice->lines), $nbtotalofrecords, 'title_accountancy.png');
+		print_barre_liste($langs->trans('PriceByCustomer'), $page, $_SERVER ['PHP_SELF'], $option, $sortfield, $sortorder, '', count($prodcustprice->lines), $nbtotalofrecords, 'title_accountancy.png');
 
 		print '<form action="' . $_SERVER["PHP_SELF"] . '?id=' . $object->id . '" method="POST">';
 		print '<input type="hidden" name="id" value="' . $object->id . '">';
@@ -1923,7 +1990,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
     		print '<td class="liste_titre"><input type="text" class="flat" name="search_soc" value="' . $search_soc . '" size="20"></td>';
     		print '<td class="liste_titre" colspan="'.$colspan.'">&nbsp;</td>';
     		// Print the search button
-            print '<td class="liste_titre" align="right">';
+            print '<td class="liste_titre maxwidthsearch">';
             $searchpicto=$form->showFilterAndCheckAddButtons(0);
             print $searchpicto;
             print '</td>';
@@ -1933,22 +2000,22 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		print '<tr class="liste_titre">';
 		print '<td>' . $langs->trans("ThirdParty") . '</td>';
 		print '<td>' . $langs->trans("AppliedPricesFrom") . '</td>';
-		print '<td align="center">' . $langs->trans("PriceBase") . '</td>';
-		print '<td align="right">' . $langs->trans("VATRate") . '</td>';
-		print '<td align="right">' . $langs->trans("HT") . '</td>';
+		print '<td class="center">' . $langs->trans("PriceBase") . '</td>';
+		print '<td class="right">' . $langs->trans("DefaultTaxRate") . '</td>';
+		print '<td class="right">' . $langs->trans("HT") . '</td>';
 		if ($mysoc->localtax1_assuj == "1" || $mysoc->localtax2_assuj == "1")
 		{
-			//print '<td align="right">' . $langs->trans("INCVATONLY") . '</td>';
-			print '<td align="right">' . $langs->trans("INCT") . '</td>';
+			//print '<td class="right">' . $langs->trans("INCVATONLY") . '</td>';
+			print '<td class="right">' . $langs->trans("INCT") . '</td>';
 		}
 		else
 		{
-			print '<td align="right">' . $langs->trans("TTC") . '</td>';
+			print '<td class="right">' . $langs->trans("TTC") . '</td>';
 		}
 
-		print '<td align="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("HT") . '</td>';
-		print '<td align="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("TTC") . '</td>';
-		print '<td align="right">' . $langs->trans("ChangedBy") . '</td>';
+		print '<td class="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("HT") . '</td>';
+		print '<td class="right">' . $langs->trans("MinPrice") . ' ' . $langs->trans("TTC") . '</td>';
+		print '<td class="right">' . $langs->trans("ChangedBy") . '</td>';
 		print '<td>&nbsp;</td>';
 		print '</tr>';
 
@@ -1977,8 +2044,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		print "<td>" . $langs->trans("Default") . "</td>";
 		print "<td>" . "</td>";
 
-		print '<td align="center">' . $langs->trans($object->price_base_type) . "</td>";
-		print '<td align="right">';
+		print '<td class="center">' . $langs->trans($object->price_base_type) . "</td>";
+		print '<td class="right">';
 
 		$positiverates='';
 		if (price2num($object->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($object->tva_tx);
@@ -1991,26 +2058,26 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 		//print $object->default_vat_code?' ('.$object->default_vat_code.')':'';
 		print "</td>";
 
-		print '<td align="right">' . price($object->price) . "</td>";
+		print '<td class="right">' . price($object->price) . "</td>";
 
 		if ($mysoc->localtax1_assuj == "1" || $mysoc->localtax2_assuj == "1")
 		{
-			//print '<td align="right">' . price($object->price_ttc) . "</td>";
-			print '<td align="right">' . price($resultarray[2]) . '</td>';
+			//print '<td class="right">' . price($object->price_ttc) . "</td>";
+			print '<td class="right">' . price($resultarray[2]) . '</td>';
 		}
 		else
 		{
-			print '<td align="right">' . price($object->price_ttc) . "</td>";
+			print '<td class="right">' . price($object->price_ttc) . "</td>";
 		}
 
 
-		print '<td align="right">' . price($object->price_min) . '</td>';
-		print '<td align="right">' . price($object->price_min_ttc) . '</td>';
-		print '<td align="right">';
+		print '<td class="right">' . price($object->price_min) . '</td>';
+		print '<td class="right">' . price($object->price_min_ttc) . '</td>';
+		print '<td class="right">';
 		print '</td>';
 		if ($user->rights->produit->supprimer || $user->rights->service->supprimer)
 		{
-		    print '<td align="right">';
+		    print '<td class="right">';
 		    print '<a href="' . $_SERVER["PHP_SELF"] . '?action=showlog_default_price&amp;id=' . $object->id . '">';
 		    print img_info($langs->trans('PriceByCustomerLog'));
 		    print '</a>';
@@ -2059,8 +2126,8 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 				print "<td>" . $staticsoc->getNomUrl(1) . "</td>";
 				print "<td>" . dol_print_date($line->datec, "dayhour") . "</td>";
 
-				print '<td align="center">' . $langs->trans($line->price_base_type) . "</td>";
-				print '<td align="right">';
+				print '<td class="center">' . $langs->trans($line->price_base_type) . "</td>";
+				print '<td class="right">';
 
 				$positiverates='';
 				if (price2num($line->tva_tx))         $positiverates.=($positiverates?'/':'').price2num($line->tva_tx);
@@ -2070,25 +2137,25 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 				echo vatrate($positiverates.($line->default_vat_code?' ('.$line->default_vat_code.')':''), '%', ($line->tva_npr?$line->tva_npr:$line->recuperableonly));
 
 				print "</td>";
-				print '<td align="right">' . price($line->price) . "</td>";
+				print '<td class="right">' . price($line->price) . "</td>";
 
 				if ($mysoc->localtax1_assuj == "1" || $mysoc->localtax2_assuj == "1")
 				{
-					//print '<td align="right">' . price($line->price_ttc) . "</td>";
-					print '<td align="right">' . price($resultarray[2]) . '</td>';
+					//print '<td class="right">' . price($line->price_ttc) . "</td>";
+					print '<td class="right">' . price($resultarray[2]) . '</td>';
 				}
 				else
 				{
-					print '<td align="right">' . price($line->price_ttc) . "</td>";
+					print '<td class="right">' . price($line->price_ttc) . "</td>";
 				}
 
-				print '<td align="right">' . price($line->price_min) . '</td>';
-				print '<td align="right">' . price($line->price_min_ttc) . '</td>';
+				print '<td class="right">' . price($line->price_min) . '</td>';
+				print '<td class="right">' . price($line->price_min_ttc) . '</td>';
 
 				// User
 				$userstatic = new User($db);
 				$userstatic->fetch($line->fk_user);
-				print '<td align="right">';
+				print '<td class="right">';
 				print $userstatic->getLoginUrl(1);
 				print '</td>';
 
@@ -2096,7 +2163,7 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 				// Action
 				if ($user->rights->produit->supprimer || $user->rights->service->supprimer)
 				{
-					print '<td align="right">';
+					print '<td class="right nowraponall">';
 					print '<a href="' . $_SERVER["PHP_SELF"] . '?action=showlog_customer_price&amp;id=' . $object->id . '&amp;socid=' . $line->fk_soc . '">';
 					print img_info($langs->trans('PriceByCustomerLog'));
 					print '</a>';
@@ -2129,6 +2196,6 @@ if (! empty($conf->global->PRODUIT_CUSTOMER_PRICES))
 	}
 }
 
+// End of page
 llxFooter();
-
 $db->close();

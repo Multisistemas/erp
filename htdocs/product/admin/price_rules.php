@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * Page to set how to autocalculate price for each level when option
  * PRODUCT_MULTIPRICE is on.
  */
@@ -23,8 +23,8 @@ require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/product.lib.php';
 
-$langs->load("admin");
-$langs->load("products");
+// Load translation files required by the page
+$langs->loadLangs(array('admin', 'products'));
 
 // Security check
 if (! $user->admin || (empty($conf->product->enabled) && empty($conf->service->enabled)))
@@ -92,7 +92,6 @@ if ($_POST) {
 				setEventMessages($langs->trans('ErrorSavingChanges'), null, 'errors');
 			}
 		}
-
 	}
 
 	setEventMessages($langs->trans("RecordSaved"), null, 'mesgs');
@@ -124,8 +123,8 @@ if (empty($conf->produit->enabled)) {
 
 llxHeader('', $langs->trans('MultipriceRules'));
 
-$linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php">'.$langs->trans("BackToModuleList").'</a>';
-print load_fiche_titre($title,$linkback,'title_setup');
+$linkback='<a href="'.DOL_URL_ROOT.'/admin/modules.php?restore_lastsearch_values=1">'.$langs->trans("BackToModuleList").'</a>';
+print load_fiche_titre($title, $linkback, 'title_setup');
 
 
 
@@ -145,7 +144,7 @@ for ($i = 1; $i <= $conf->global->PRODUIT_MULTIPRICES_LIMIT; $i++) {
 	$price_options[$i] = $langs->trans('SellingPrice').' '.$i;
 }
 
-$genPriceOptions = function($level) use ($price_options) {
+$genPriceOptions = function ($level) use ($price_options) {
 
 	$return = array();
 
@@ -184,22 +183,22 @@ $genPriceOptions = function($level) use ($price_options) {
 				</td>
 				<td style="text-align: center">
 					<input type="text" style="text-align: right" name="var_min_percent[<?php echo $i ?>]" size="5" value="<?php echo price(isset($rules[$i]) ? $rules[$i]->var_min_percent : 0, 2) ?>">
-					<?php echo $langs->trans('PercentDiscountOver', $langs->trans('SellingPrice').' '.$i) ?>
+					<?php echo $langs->trans('PercentDiscountOver', $langs->transnoentitiesnoconv('SellingPrice').' '.$i) ?>
 				</td>
 			</tr>
 		<?php endfor ?>
 	</table>
 
-<?php 
+<?php
 
 dol_fiche_end();
 
 print '<div style="text-align: center">
 		<input type="submit" value="'.$langs->trans('Save').'" class="button">
 	</div>';
-	
+
 print '</form>';
 
+// End of page
 llxFooter();
-
 $db->close();

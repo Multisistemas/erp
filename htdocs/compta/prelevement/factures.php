@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2005      Rodolphe Quiedeville <rodolphe@quiedeville.org>
  * Copyright (C) 2005-2017 Laurent Destailleur  <eldy@users.sourceforge.net>
- * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@capnetworks.com>
+ * Copyright (C) 2005-2009 Regis Houssin        <regis.houssin@inodbox.com>
  * Copyright (C) 2010-2012 Juanjo Menent        <jmenent@2byte.es>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,31 +24,28 @@
  *     \brief      Page liste des factures prelevees
  */
 
-require('../../main.inc.php');
+require '../../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/prelevement.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/bonprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/prelevement/class/rejetprelevement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/paiement/class/paiement.class.php';
 require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 
-$langs->load("banks");
-$langs->load("categories");
-$langs->load("companies");
-$langs->load('withdrawals');
-$langs->load('bills');
+// Load translation files required by the page
+$langs->loadLangs(array('banks', 'categories', 'companies', 'withdrawals', 'bills'));
 
 // Securite acces client
 if ($user->societe_id > 0) accessforbidden();
 
 // Get supervariables
-$prev_id = GETPOST('id','int');
-$socid = GETPOST('socid','int');
+$prev_id = GETPOST('id', 'int');
+$socid = GETPOST('socid', 'int');
 $ref = GETPOST('ref', 'alpha');
 
-$limit = GETPOST('limit','int')?GETPOST('limit','int'):$conf->liste_limit;
-$sortfield = GETPOST("sortfield",'alpha');
-$sortorder = GETPOST("sortorder",'alpha');
-$page = GETPOST("page",'int');
+$limit = GETPOST('limit', 'int')?GETPOST('limit', 'int'):$conf->liste_limit;
+$sortfield = GETPOST("sortfield", 'alpha');
+$sortorder = GETPOST("sortorder", 'alpha');
+$page = GETPOST("page", 'int');
 if (empty($page) || $page == -1) { $page = 0; }     // If $page is not defined, or '' or -1
 $offset = $limit * $page;
 $pageprev = $page - 1;
@@ -56,7 +53,7 @@ $pagenext = $page + 1;
 if (! $sortfield) $sortfield='p.ref';
 if (! $sortorder) $sortorder='DESC';
 
-$object = new BonPrelevement($db,"");
+$object = new BonPrelevement($db, "");
 
 
 
@@ -67,23 +64,25 @@ $object = new BonPrelevement($db,"");
 $invoicetmp = new Facture($db);
 $thirdpartytmp = new Societe($db);
 
-llxHeader('',$langs->trans("WithdrawalsReceipts"));
+llxHeader('', $langs->trans("WithdrawalsReceipts"));
 
 if ($prev_id > 0 || $ref)
 {
-  	if ($object->fetch($prev_id, $ref) == 0)
+  	if ($object->fetch($prev_id, $ref) >= 0)
     {
     	$head = prelevement_prepare_head($object);
 		dol_fiche_head($head, 'invoices', $langs->trans("WithdrawalsReceipts"), -1, 'payment');
 
-		dol_banner_tab($object, 'ref', '', 1, 'ref', 'ref');
+		$linkback = '<a href="'.DOL_URL_ROOT.'/compta/prelevement/bons.php">'.$langs->trans("BackToList").'</a>';
+
+		dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref');
 
 		print '<div class="fichecenter">';
 		print '<div class="underbanner clearboth"></div>';
       	print '<table class="border" width="100%">';
 
 		//print '<tr><td class="titlefield">'.$langs->trans("Ref").'</td><td>'.$object->getNomUrl(1).'</td></tr>';
-		print '<tr><td class="titlefield">'.$langs->trans("Date").'</td><td>'.dol_print_date($object->datec,'day').'</td></tr>';
+		print '<tr><td class="titlefield">'.$langs->trans("Date").'</td><td>'.dol_print_date($object->datec, 'day').'</td></tr>';
 		print '<tr><td>'.$langs->trans("Amount").'</td><td>'.price($object->amount).'</td></tr>';
 		// Status
 		//print '<tr><td>'.$langs->trans('Status').'</td><td>'.$object->getLibStatut(1).'</td></tr>';
@@ -94,7 +93,7 @@ if ($prev_id > 0 || $ref)
 			$muser->fetch($object->user_trans);
 
 			print '<tr><td>'.$langs->trans("TransData").'</td><td>';
-			print dol_print_date($object->date_trans,'day');
+			print dol_print_date($object->date_trans, 'day');
 			print ' '.$langs->trans("By").' '.$muser->getFullName($langs).'</td></tr>';
 			print '<tr><td>'.$langs->trans("TransMetod").'</td><td>';
 			print $object->methodes_trans[$object->method_trans];
@@ -103,7 +102,7 @@ if ($prev_id > 0 || $ref)
 		if($object->date_credit <> 0)
 		{
 			print '<tr><td>'.$langs->trans('CreditDate').'</td><td>';
-			print dol_print_date($object->date_credit,'day');
+			print dol_print_date($object->date_credit, 'day');
 			print '</td></tr>';
 		}
 
@@ -135,7 +134,6 @@ if ($prev_id > 0 || $ref)
 		print '</div>';
 
 		dol_fiche_end();
-
     }
   	else
     {
@@ -146,7 +144,7 @@ if ($prev_id > 0 || $ref)
 
 // List of invoices
 $sql = "SELECT pf.rowid,";
-$sql.= " f.rowid as facid, f.facnumber as ref, f.total_ttc,";
+$sql.= " f.rowid as facid, f.ref as ref, f.total_ttc,";
 $sql.= " s.rowid as socid, s.nom as name, pl.statut, pl.amount as amount_requested";
 $sql.= " FROM ".MAIN_DB_PREFIX."prelevement_bons as p";
 $sql.= ", ".MAIN_DB_PREFIX."prelevement_lignes as pl";
@@ -157,10 +155,10 @@ $sql.= " WHERE pf.fk_prelevement_lignes = pl.rowid";
 $sql.= " AND pl.fk_prelevement_bons = p.rowid";
 $sql.= " AND f.fk_soc = s.rowid";
 $sql.= " AND pf.fk_facture = f.rowid";
-$sql.= " AND f.entity = ".$conf->entity;
-if ($prev_id) $sql.= " AND p.rowid=".$prev_id;
+$sql.= " AND f.entity IN (".getEntity('invoice').")";
+if ($object->id > 0) $sql.= " AND p.rowid=".$object->id;
 if ($socid) $sql.= " AND s.rowid = ".$socid;
-$sql.= $db->order($sortfield,$sortorder);
+$sql.= $db->order($sortfield, $sortorder);
 
 // Count total nb of records
 $nbtotalofrecords = '';
@@ -168,9 +166,14 @@ if (empty($conf->global->MAIN_DISABLE_FULL_SCANLIST))
 {
     $result = $db->query($sql);
     $nbtotalofrecords = $db->num_rows($result);
+    if (($page * $limit) > $nbtotalofrecords)	// if total resultset is smaller then paging size (filtering), goto and load page 0
+    {
+    	$page = 0;
+    	$offset = 0;
+    }
 }
 
-$sql.= $db->plimit($limit + 1,$offset);
+$sql.= $db->plimit($limit + 1, $offset);
 
 $result = $db->query($sql);
 if ($result)
@@ -200,11 +203,11 @@ if ($result)
 	print '<div class="div-table-responsive-no-min">';		// You can use div-table-responsive-no-min if you dont need reserved height for your table
   	print '<table class="liste" width="100%">';
   	print '<tr class="liste_titre">';
-  	print_liste_field_titre("Bill",$_SERVER["PHP_SELF"],"p.ref",'',$param,'',$sortfield,$sortorder);
-  	print_liste_field_titre("ThirdParty",$_SERVER["PHP_SELF"],"s.nom",'',$param,'',$sortfield,$sortorder);
-  	print_liste_field_titre("AmountInvoice",$_SERVER["PHP_SELF"],"f.total_ttc","",$param,'align="right"',$sortfield,$sortorder);
-  	print_liste_field_titre("AmountRequested",$_SERVER["PHP_SELF"],"pl.amount_requested","",$param,'align="right"',$sortfield,$sortorder);
-  	print_liste_field_titre("StatusDebitCredit",$_SERVER["PHP_SELF"],"","",$param,'align="center"',$sortfield,$sortorder);
+  	print_liste_field_titre("Bill", $_SERVER["PHP_SELF"], "p.ref", '', $param, '', $sortfield, $sortorder);
+  	print_liste_field_titre("ThirdParty", $_SERVER["PHP_SELF"], "s.nom", '', $param, '', $sortfield, $sortorder);
+  	print_liste_field_titre("AmountInvoice", $_SERVER["PHP_SELF"], "f.total_ttc", "", $param, 'class="right"', $sortfield, $sortorder);
+  	print_liste_field_titre("AmountRequested", $_SERVER["PHP_SELF"], "pl.amount", "", $param, 'class="right"', $sortfield, $sortorder);
+  	print_liste_field_titre("StatusDebitCredit", $_SERVER["PHP_SELF"], "", "", $param, 'align="center"', $sortfield, $sortorder);
 	print_liste_field_titre('');
 	print "</tr>\n";
 
@@ -232,10 +235,10 @@ if ($result)
       	print "</td>\n";
 
       	// Amount of invoice
-      	print '<td align="right">'.price($obj->total_ttc)."</td>\n";
+      	print '<td class="right">'.price($obj->total_ttc)."</td>\n";
 
       	// Amount requested
-      	print '<td align="right">'.price($obj->amount_requested)."</td>\n";
+      	print '<td class="right">'.price($obj->amount_requested)."</td>\n";
 
       	// Status of requests
       	print '<td align="center">';
@@ -270,11 +273,11 @@ if ($result)
       	print '<tr class="liste_total">';
      	print '<td>'.$langs->trans("Total").'</td>';
       	print '<td>&nbsp;</td>';
-      	print '<td align="right">';
+      	print '<td class="right">';
 		//if ($totalinvoices != $object->amount) print img_warning("AmountOfFileDiffersFromSumOfInvoices");		// It is normal to have total that differs. For an amount of invoice of 100, request to pay may be 50 only.
       	if ($totalamount_requested != $object->amount) print img_warning("AmountOfFileDiffersFromSumOfInvoices");
 		print "</td>\n";
-      	print '<td align="right">';
+      	print '<td class="right">';
 		print price($totalamount_requested);
       	print "</td>\n";
       	print '<td>&nbsp;</td>';
@@ -292,7 +295,6 @@ else
 	dol_print_error($db);
 }
 
-
+// End of page
 llxFooter();
-
 $db->close();

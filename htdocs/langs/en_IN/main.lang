@@ -21,6 +21,4 @@ FormatDateHourTextShort=%b %d, %Y, %I:%M %p
 FormatDateHourText=%B %d, %Y, %I:%M %p
 CommercialProposalsShort=Quotations
 LinkToProposal=Link to quotation
-LinkToSupplierProposal=Link to supplier quotation
 SearchIntoCustomerProposals=Customer quotations
-SearchIntoSupplierProposals=Supplier quotations

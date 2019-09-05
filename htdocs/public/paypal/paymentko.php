@@ -1,7 +1,7 @@
 <?php
 /* Copyright (C) 2001-2002	Rodolphe Quiedeville	<rodolphe@quiedeville.org>
  * Copyright (C) 2006-2013	Laurent Destailleur		<eldy@users.sourceforge.net>
- * Copyright (C) 2012		Regis Houssin			<regis.houssin@capnetworks.com>
+ * Copyright (C) 2012		Regis Houssin			<regis.houssin@inodbox.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@
  *                  This token can be used to get more informations.
  */
 
-define("NOLOGIN",1);		// This means this output page does not require to be logged.
-define("NOCSRFCHECK",1);	// We accept to go on this page from external web site.
+define("NOLOGIN", 1);		// This means this output page does not require to be logged.
+define("NOCSRFCHECK", 1);	// We accept to go on this page from external web site.
 
 // For MultiCompany module.
 // Do not use GETPOST here, function is not defined and define must be done before including main.inc.php
@@ -41,16 +41,9 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
 
 // Security check
-if (empty($conf->paypal->enabled)) accessforbidden('',0,0,1);
+if (empty($conf->paypal->enabled)) accessforbidden('', 0, 0, 1);
 
-$langs->load("main");
-$langs->load("other");
-$langs->load("dict");
-$langs->load("bills");
-$langs->load("companies");
-$langs->load("paybox");
-$langs->load("paypal");
-$langs->load("stripe");
+$langs->loadLangs(array("main", "other", "dict", "bills", "companies", "paybox", "paypal", "stripe"));
 
 $PAYPALTOKEN=GETPOST('TOKEN');
 if (empty($PAYPALTOKEN)) $PAYPALTOKEN=GETPOST('token');
@@ -91,20 +84,20 @@ if (! empty($_SESSION['ipaddress']))      // To avoid to make action twice
     // Set by newpayment.php
     $paymentType        = $_SESSION['PaymentType'];
     $currencyCodeType   = $_SESSION['currencyCodeType'];
-    $FinalPaymentAmt    = $_SESSION["Payment_Amount"];
+    $FinalPaymentAmt    = $_SESSION["FinalPaymentAmt"];
     // From env
     $ipaddress          = $_SESSION['ipaddress'];
 
     // Appel des triggers
     include_once DOL_DOCUMENT_ROOT . '/core/class/interfaces.class.php';
     $interface=new Interfaces($db);
-    $result=$interface->run_triggers('PAYPAL_PAYMENT_KO',$object,$user,$langs,$conf);
+    $result=$interface->run_triggers('PAYPAL_PAYMENT_KO', $object, $user, $langs, $conf);
     if ($result < 0) { $error++; $errors=$interface->errors; }
     // Fin appel triggers
 
     // Send an email
     $sendemail = '';
-    if (! empty($conf->global->PAYPAL_PAYONLINE_SENDEMAIL))  $sendemail=$conf->global->PAYPAL_PAYONLINE_SENDEMAIL;
+    if (! empty($conf->global->ONLINE_PAYMENT_SENDEMAIL))  $sendemail=$conf->global->ONLINE_PAYMENT_SENDEMAIL;
 
     if ($sendemail)
     {
@@ -153,7 +146,7 @@ if (! empty($_SESSION['ipaddress']))      // To avoid to make action twice
 
 
 $head='';
-if (! empty($conf->global->PAYPAL_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->PAYPAL_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
+if (! empty($conf->global->ONLINE_PAYMENT_CSS_URL)) $head='<link rel="stylesheet" type="text/css" href="'.$conf->global->ONLINE_PAYMENT_CSS_URL.'?lang='.$langs->defaultlang.'">'."\n";
 
 $conf->dol_hide_topmenu=1;
 $conf->dol_hide_leftmenu=1;
@@ -166,11 +159,13 @@ print '<span id="dolpaymentspan"></span>'."\n";
 print '<div id="dolpaymentdiv" align="center">'."\n";
 print $langs->trans("YourPaymentHasNotBeenRecorded")."<br><br>";
 
-if (! empty($conf->global->PAYPAL_MESSAGE_KO)) print $conf->global->PAYPAL_MESSAGE_KO;
+$key='ONLINE_PAYMENT_MESSAGE_KO';
+if (! empty($conf->global->$key)) print $conf->global->$key;
+
 print "\n</div>\n";
 
 
-htmlPrintOnlinePaymentFooter($mysoc,$langs);
+htmlPrintOnlinePaymentFooter($mysoc, $langs, 0, $suffix);
 
 
 llxFooter('', 'public');
