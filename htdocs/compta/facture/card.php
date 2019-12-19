@@ -2477,14 +2477,13 @@ if (empty($reshook))
 			$action = 'edit_extras';
 	}
 
-
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * Update vat retention
 	 */
 	if ($action == 'update_vat_invoice_retention') {
 		$object->oldcopy = dol_clone($object);
-		
-		////////////////////////
+
 		$percent = $_POST['options_vat_retention'];
 
 		$object->array_options['options_vat_retention'] = $percent;
@@ -2501,7 +2500,7 @@ if (empty($reshook))
 		$object->update_price(0, 'auto');
 		
 	}
-
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
 
@@ -2549,7 +2548,6 @@ if (empty($reshook))
 			$action = 'edit_extras';
 	}
 }
-
 
 /*
  * View
@@ -4717,6 +4715,7 @@ elseif ($id > 0 || ! empty($ref))
 
 	dol_fiche_end();
 
+	//var_dump($object->array_options);
 
 	// Actions buttons
 
