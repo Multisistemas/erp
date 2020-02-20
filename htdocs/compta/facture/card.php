@@ -2477,18 +2477,23 @@ if (empty($reshook))
 			$action = 'edit_extras';
 	}
 
-
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * Update vat retention
 	 */
 	if ($action == 'update_vat_invoice_retention') {
 		$object->oldcopy = dol_clone($object);
-		
-		////////////////////////
+
+		// Fill array 'array_options' with data from add form //////////////////////////////
+		$extralabels = $extrafields->fetch_name_optionals_label($object->table_element);
+
 		$percent = $_POST['options_vat_retention'];
 
 		$object->array_options['options_vat_retention'] = $percent;
 		$object->updateExtraField('vat_retention');
+
+		$ret = $extrafields->setOptionalsFromPost($extralabels, $object, GETPOST('vat_retention', 'none'));
+		if ($ret < 0) $error++;
 					
 		// Calculate 10% percent
 		$vat = ((float)$percent * (float)$object->total_ht) / 100;		
@@ -2499,9 +2504,23 @@ if (empty($reshook))
 
 		unset($_POST['options_vat_retention']);
 		$object->update_price(0, 'auto');
+
+		if (! $error)
+		{
+			// Actions on extra fields
+			$result = $object->insertExtraFields('BILL_MODIFY');
+			/*if ($result < 0)
+			{
+				setEventMessages($object->error, $object->errors, 'errors');
+				$error++;
+			}*/
+		}
+
+		if ($error)
+			$action = 'edit_extras';
 		
 	}
-
+	//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	include DOL_DOCUMENT_ROOT.'/core/actions_printing.inc.php';
 
@@ -2549,7 +2568,6 @@ if (empty($reshook))
 			$action = 'edit_extras';
 	}
 }
-
 
 /*
  * View
@@ -4717,6 +4735,7 @@ elseif ($id > 0 || ! empty($ref))
 
 	dol_fiche_end();
 
+	//var_dump($object->array_options);
 
 	// Actions buttons
 
