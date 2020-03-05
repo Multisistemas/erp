@@ -37,28 +37,24 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/functions2.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/modules/facture/doc/NumberToLetterConverter.php';
 
-
 /**
  *	Class to manage PDF invoice template
  */
 class pdf_factura_exenta extends ModelePDFFactures
 {
-    var $db;
-    var $name;
-    var $description;
-    var $type;
-
-    var $phpmin = array(4,3,0); // Minimum version of PHP required by module
-    var $version = 'dolibarr';
-
-    var $page_largeur;
-    var $page_hauteur;
-    var $format;
+  var $db;
+  var $name;
+  var $description;
+  var $type;
+  var $phpmin = array(4,3,0); // Minimum version of PHP required by module
+  var $version = 'dolibarr';
+  var $page_largeur;
+  var $page_hauteur;
+  var $format;
 	var $marge_gauche;
 	var	$marge_droite;
 	var	$marge_haute;
 	var	$marge_basse;
-
 	var $emetteur;	// Objet societe qui emet
 
 	/**
@@ -276,7 +272,7 @@ class pdf_factura_exenta extends ModelePDFFactures
 
 
 
-				$tab_top = 70;
+				$tab_top = 80;
 				$tab_top_newpage = (empty($conf->global->MAIN_PDF_DONOTREPEAT_HEAD)?42:10);
 				$tab_height = 130;
 				$tab_height_newpage = 150;
@@ -382,22 +378,16 @@ class pdf_factura_exenta extends ModelePDFFactures
 					
 
 
-					// Cantidad de IVA
+					// CANTIDAD DE IVA
 					$vatrate=(string) $object->lines[$i]->tva_tx;
 
 					$total_ttc = ($conf->multicurrency->enabled && $object->multiccurency_tx != 1) ? $object->multicurrency_total_ttc : $object->total_ttc;
 
 					
-
-					// Columna "precio unitario"
-					$pdf->SetXY($this->posxtva + 5, $curY);
-					$pdf->MultiCell(30, 3, "$ ".price($up_excl_tax), 0, 'R', 0); ////// --> Total with tax
-
-
-					// Cantidades de articulos facturados
+					// COLUMNA "CANTIDAD" /////////////////////////////////////////////////////////////////////////////////////////
 					$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
 					$pdf->SetXY(7, $curY);
-					
+
 					if ($this->situationinvoice)
 					{
 						$pdf->MultiCell($this->posxprogress-$this->posxqty-0.8, 4, $qty, 0, 'C');
@@ -410,17 +400,18 @@ class pdf_factura_exenta extends ModelePDFFactures
 					{
 						$pdf->MultiCell($this->posxdiscount-$this->posxqty-0.8, 4, $qty, 0, 'C');
 					}
+
+
+					// COLUMNA "PRECIO UNITARIO" ////////////////////////////////////////////////////////////////////////////////////
+					$pdf->SetXY($this->posxtva + 12, $curY);
+					$pdf->MultiCell(30, 3, "$ ".price($object->lines[$i]->multicurrency_total_ttc), false, 'R', 0); ////// --> Total with tax							
 					
 
-					
+					// COLUMNA "VENTAS AFECTAS" /////////////////////////////////////////////////////////////////////////////////////
 					//$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
-					//$pdf->SetXY($this->postotalht - 25, $curY);
-					//$pdf->MultiCell(25, 3, "$ ".price($up_excl_tax), 0, 'R', 0); ////// --> Total with tax
+					$pdf->SetXY($this->postotalht - 21, $curY);
+					$pdf->MultiCell(30, 3, "$ ".price($object->lines[$i]->multicurrency_total_ttc), 0, 'R', 0); ////// --> Total with tax
 
-					// Columna "ventas afectas"
-					$total_excl_tax = pdf_getlinetotalexcltax($object, $i, $outputlangs, $hidedetails);
-					$pdf->SetXY($this->postotalht - 27, $curY); // ----------------------------------------------- TOTAL PER UNITS
-					$pdf->MultiCell(25, 3, "$ ".$total_excl_tax, 0, 'R', 0);
 
 
 					$sign=1;
@@ -484,29 +475,31 @@ class pdf_factura_exenta extends ModelePDFFactures
 				
 				$pdf->SetFillColor(255,255,255);
 
-				// Si no hay IVA entonces mostrar total solo en la celda de ventas exentas
-				/*if ($vatrate != '0.000') {
+				if ($vatrate != '0.000') {
+					// Mostrar el porcentaje de IVA junto a (-) IVA retenido
+					$totalvat;
+
+					foreach($this->tva as $tvakey => $tvaval)
+					{
+						if ($tvakey != 0)    // On affiche pas taux 0
+						{
+							$this->atleastoneratenotnull++;
+
+							$index++;
+							$pdf->SetXY($this->postotalht - 10, 239);
+
+							$tvacompl='';
+							if (preg_match('/\*/',$tvakey))
+							{
+								$tvakey=str_replace('*','',$tvakey);
+
+							}
 				
-					// Total mostrado en "SUMAS" sacado de sumar todos los cobros
-					$pdf->SetFillColor(255,255,255);
-
-					//$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
-
-					$pdf->SetXY($this->postotalht, 234);
-					$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ttc + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
-				} else {
-					$pdf->SetFillColor(255,255,255);
-
-					//$total_ht = ($conf->multicurrency->enabled && $object->mylticurrency_tx != 1 ? $object->multicurrency_total_ht : $object->total_ht);
-
-					$pdf->SetXY($this->postotalht - 26	, 232);
-					$pdf->MultiCell(25, 4, "$ ".price($sign * ($total_ttc + (! empty($object->remise)?$object->remise:0)), 0, $outputlangs), 0, 'R', 1);
-				}*/
-				//////////////////////////////////////////////////////////////
-
-
-
-				
+							$totalvat.=vatrate($tvakey,1).$tvacompl;
+							//$pdf->MultiCell(25, 4, $totalvat, 0, 'L', 1);
+						}
+					}
+				}
 
 
 				
@@ -518,7 +511,7 @@ class pdf_factura_exenta extends ModelePDFFactures
 				$convertedToLetter = new NumberToLetterConverter();
 				$thevalueinletters = $convertedToLetter->to_word((string)$thetotal, "USD");
 				$totalinletters = ucfirst(strtolower($thevalueinletters));
-				$pdf->SetXY(30, 235);
+				$pdf->SetXY(30, 233);
 				$pdf->MultiCell(100, 4, $totalinletters, 0, 'L', 1);
 
 
@@ -530,14 +523,14 @@ class pdf_factura_exenta extends ModelePDFFactures
 			
 
 				// Sumas
-				$pdf->SetXY($this->postotalht - 27, 233);
-				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
+				$pdf->SetXY($this->postotalht - 21, 214);
+				$pdf->MultiCell(30, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 
 				// Total
 				$index++;
-				$pdf->SetXY($this->postotalht, 260);
-				$pdf->MultiCell(25, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
+				$pdf->SetXY($this->postotalht + 3, 256);
+				$pdf->MultiCell(30, 4, "$ ".price($sign * $total_ttc, 0, $outputlangs), $useborder, 'R', 1);
 
 				
 				//$this->_pagefoot($pdf,$object,$outputlangs); /////////////////////////////////// Footer
@@ -546,7 +539,7 @@ class pdf_factura_exenta extends ModelePDFFactures
 
 				$pdf->Close();
 
-				//$pdf->Output('exenta.pdf', 'I');
+				//$pdf->Output('temporal.pdf', 'I');
 
 				$pdf->Output($file,'F');
 
@@ -603,13 +596,13 @@ class pdf_factura_exenta extends ModelePDFFactures
 
     	// Imprimir número de factura en el erp
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(50,32);
+		$pdf->SetXY(50,38);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, $outputlangs->convToOutputCharset($object->ref), '', 'C');
 
 		// Imprimir fecha en que se facturó
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(120,33);
+		$pdf->SetXY(117,47);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, dol_print_date($object->date,"day",false,$outputlangs), '', 'C');
 
@@ -623,19 +616,19 @@ class pdf_factura_exenta extends ModelePDFFactures
 		// Imprimir información de la empresa a la que se factura
 		// Nombre
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,37);
+		$pdf->SetXY(36,47);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->nom, '', 'L');
 
 		// Dirección
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(30,42);
+		$pdf->SetXY(36,55);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell(200, 4, (string)$thirdparty->address, '', 'L');
 
 		// DUI/NIT
 		$pdf->SetFont('','',$default_font_size);
-		$pdf->SetXY(95,49);
+		$pdf->SetXY(60,63);
 		$pdf->SetTextColor(0,0,0);
 		$pdf->MultiCell($w, 4, (string)$thirdparty->idprof1, '', 'L');
 
