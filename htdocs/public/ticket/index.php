@@ -87,7 +87,7 @@ printTheContainer();
 <div class="row" >
 
 			<div class="col-md-2"></div>
-			<div class="col-md-8" style="top:120px;padding: 20px;">
+			<div class="col-md-8" style="top:75px;padding: 20px;">
 				<p style="text-align: center;"><?php echo ($conf->global->TICKET_PUBLIC_TEXT_HOME ? $conf->global->TICKET_PUBLIC_TEXT_HOME : $langs->trans("TicketPublicDesc")) ?></p>
 
 				<div class="ticketform" style="padding: 20px;">

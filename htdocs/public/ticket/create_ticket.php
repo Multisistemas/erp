@@ -367,7 +367,7 @@ printTheContainer();
 
 print '<div class="row" >';
 print '<div class="col-md-1"></div>';
-print '<div class="col-md-10" style="top:70px;padding: 20px;">';
+print '<div class="col-md-10" style="top:50px;padding: 20px;">';
 
 print '<div style="" class="ticketpublicarea" style="width:100%;">';
 

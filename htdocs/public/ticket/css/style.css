@@ -126,6 +126,10 @@ div.ticketform .blue:hover {
     width: 70%;
 }
 
+#logosubscribe {
+    display: none;
+}
+
 /* On screens that are 992px or less, set the background color to blue */
 @media screen and (max-width: 720px) {
     #cke_message {
