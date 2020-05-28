@@ -7,14 +7,9 @@ div.ticketform {
     position: static;
     padding: 2em 1em;
     overflow-x: auto;
-    
-    background-color: rgb(255, 255, 255);
-    
-    
     margin: 1.5em;
-    background : #ffffff;
+    background : #f3f3f3;
 	text-align: center;
-    box-shadow: 0 10px 40px 0 #cccccc;
 }
 
 div.ticketform .index_create, .index_display {
@@ -70,10 +65,7 @@ div.ticketform .blue:hover {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#0095cc', endColorstr='#00678e');
 }
 
-#form_create_ticket, #form_view_ticket
-{
-    margin-left: 10px;
-    margin-right: 10px;
+#form_create_ticket, #form_view_ticket {
     padding-left:1em;
     padding-right:1em;
     padding-top:1.5em;
@@ -128,6 +120,22 @@ div.ticketform .blue:hover {
 
 #logosubscribe {
     display: none;
+}
+
+.cs-btn-4:link {
+    color: #ffffff !important;
+}
+
+.cs-btn-4:hover {
+    color: #46d599 !important;
+}
+
+.cs-btn-3:link {
+    color: #ffffff !important;
+}
+
+.cs-btn-3:hover {
+    color: #737de8 !important;
 }
 
 /* On screens that are 992px or less, set the background color to blue */

@@ -92,16 +92,19 @@ printTheContainer();
 
 				<div class="ticketform" style="padding: 20px;">
 
-				<a href="create_ticket.php" class="btn btn-warning btn-block btn-lg" style="white-space: normal;margin-bottom: 20px;">
+				<a href="create_ticket.php" class="cs-btn-4" style="white-space: normal;margin-bottom: 20px; width: 100%;">
 					<?php echo dol_escape_htmltag($langs->trans("CreateTicket")); ?>
+					<i class="fas fa-chevron-right"></i>
 				</a>
 
-				<a href="list.php" class="btn btn-info btn-block btn-lg" style="white-space: normal;margin-bottom: 20px;">
+				<a href="list.php" class="cs-btn-3" style="white-space: normal;margin-bottom: 20px; width: 100%;">
 					<?php echo dol_escape_htmltag($langs->trans("ShowListTicketWithTrackId")); ?>
+					<i class="fas fa-chevron-right"></i>
 				</a>
 
-				<a href="view.php" class="btn btn-info btn-block btn-lg" style="white-space: normal;margin-bottom: 20px;">
+				<a href="view.php" class="cs-btn-3" style="white-space: normal;margin-bottom: 20px; width: 100%;">
 					<?php echo dol_escape_htmltag($langs->trans("ShowTicketWithTrackId")); ?>
+					<i class="fas fa-chevron-right"></i>
 				</a>
 
 				</div>

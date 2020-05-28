@@ -397,14 +397,21 @@ if ($action != "infos_success") {
 }
 
 print '</div>';
-
 print '</div>';
 print '<div class="col-md-1"></div>';
-
 print '</div>';
 
+print '<br/>';
+print '<br/>';
 print '<div class="row" >';
-print '<div class="col-md-12" style="height:40px;"></div>';
+print '<div class="col-md-1"></div>';
+print '<div class="col-md-10" style="height:40px;">';
+print '<a href="index.php" class="cs-btn-4" style="height:35px;width:100px;min-width:100px;">';
+print '<i class="fas fa-chevron-left"></i>&nbsp;&nbsp;';
+print 'Inicio';
+print '</a>';
+print '</div>';
+print '<div class="col-md-1"></div>';
 print '</div>';
 
 printTheFooter($footerjs);
