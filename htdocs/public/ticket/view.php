@@ -42,6 +42,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/ticket.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/security.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/company.lib.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/payments.lib.php';
+include_once("partials.php");
 
 // Load translation files required by the page
 $langs->loadLangs(array("companies","other","ticket"));
@@ -219,11 +220,33 @@ if (!$conf->global->TICKET_ENABLE_PUBLIC_INTERFACE) {
 }
 
 $arrayofjs = array();
-$arrayofcss = array('/ticket/css/styles.css.php');
+//$arrayofcss = array('/ticket/css/styles.css.php');
+
+$arrayofcss = array(
+    '/opensurvey/css/style.css',
+    '/public/ticket/css/style.css',
+    '/public/ticket/css/style.min.css',
+    '/public/ticket/css/bootstrap.min.css',
+);
+
+$footerjs = array(
+    dol_buildpath('/public/ticket/js/scripts.js', 1),
+    dol_buildpath('/public/ticket/js/all.js', 1),
+);
 
 llxHeaderTicket($langs->trans("Tickets"), "", 0, 0, $arrayofjs, $arrayofcss);
 
-print '<div style="margin: 0 auto;" class="ticketpublicarea">';
+printTheContainer();
+
+print '<div class="row" >';
+print '<div class="col-md-12" style="height:80px;"></div>';
+print '</div>';
+
+print '<div class="row" >';
+print '<div class="col-md-1"></div>';
+print '<div class="col-md-10" style="padding: 20px;">';
+
+print '<div style="margin: 0 auto;width:100%" class="ticketpublicarea">';
 
 if ($action == "view_ticket" || $action == "presend" || $action == "close" || $action == "confirm_public_close") {
     if ($display_ticket) {
@@ -397,11 +420,31 @@ if ($action == "view_ticket" || $action == "presend" || $action == "close" || $a
     print "</div>\n";
 }
 
-print "</div>";
+print '</div>';
+
+print '</div>';
+print '<div class="col-md-1"></div>';
+print '</div>';
+
+
+print '<br/>';
+print '<br/>';
+print '<div class="row" >';
+print '<div class="col-md-1"></div>';
+print '<div class="col-md-10" style="height:40px;">';
+print '<a href="index.php" class="cs-btn-4" style="height:35px;width:100px;min-width:100px;">';
+print '<i class="fas fa-chevron-left"></i>&nbsp;&nbsp;';
+print 'Inicio';
+print '</a>';
+print '</div>';
+print '<div class="col-md-1"></div>';
+print '</div>';
+
+printTheFooter($footerjs);
 
 // End of page
-htmlPrintOnlinePaymentFooter($mysoc, $langs, 0, $suffix, $object);
+//htmlPrintOnlinePaymentFooter($mysoc, $langs, 0, $suffix, $object);
 
-llxFooter('', 'public');
+//llxFooter('', 'public');
 
 $db->close();
