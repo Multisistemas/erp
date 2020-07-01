@@ -1,6 +1,6 @@
 # Dolibarr language file - Source file is en_US - commercial
 Commercial=Einkauf | Vertrieb
-CommercialArea=Vertrieb - Übersicht
+CommercialArea=Übersicht Einkauf & Vertrieb 
 Customer=Kunde
 Customers=Kunden
 Prospect=Interessent
@@ -29,8 +29,8 @@ ShowCustomer=Kunden anzeigen
 ShowProspect=Interessent anzeigen
 ListOfProspects=Liste der Interessenten
 ListOfCustomers=Kundenliste
-LastDoneTasks=Letzte %s erledigte Aufgaben
-LastActionsToDo=%s älteste nicht erledigte Aufgaben
+LastDoneTasks=Zuletzt erledigte Aufgaben (maximal %s)
+LastActionsToDo=Älteste nicht erledigte Aufgaben (maximal %s)
 DoneAndToDoActions=Abgeschlossene und zu unvollständige Ereignisse
 DoneActions=Abgeschlossene Ereignisse
 ToDoActions=Unvollständige Ereignisse

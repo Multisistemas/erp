@@ -14,7 +14,7 @@
 -- GNU General Public License for more details.
 --
 -- You should have received a copy of the GNU General Public License
--- along with this program. If not, see <http://www.gnu.org/licenses/>.
+-- along with this program. If not, see <https://www.gnu.org/licenses/>.
 --
 --
 -- Actions commerciales
@@ -48,7 +48,6 @@ create table llx_actioncomm
   priority			smallint,						-- priority (ical standard)
   visibility		varchar(12) DEFAULT 'default',	-- visibility (ical standard) - 'default', 'public', 'private', 'confidential'
   fulldayevent		smallint NOT NULL default 0,    -- full day (ical standard)
-  punctual			smallint NOT NULL default 1,    -- deprecated. milestone is event with date start (datep) = date end (datep2)
   percent			smallint NOT NULL default 0,
   location			varchar(128),
   durationp			real,							-- planed duration
