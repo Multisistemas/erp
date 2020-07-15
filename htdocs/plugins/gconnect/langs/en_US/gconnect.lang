@@ -1,0 +1,60 @@
+# Dolibarr language file - en_US - GConnect
+CHARSET=UTF-8
+# Module
+ModuleName=GConnect OAuth 2
+ModuleDesc=Users authentification with Google
+# Admin
+Config=Setup
+Support=Support
+About=About
+# Config
+GoogleApiConfig=Google API configuration
+OtherConfig=Other module configurations
+ImportFrom=Import from
+ManualConfiguration=Manual configuration
+JavascriptOrigin=Javascript origin
+RedirectURL=Redirect URL
+JSONConfigFile=JSON configuration file
+ClientId=Client ID
+ClientSecret=Client Secret
+EmailDomain=Insert email domains allowed
+BadDomain=Incorrect domain: don't use @
+OriginCall=Insert origin call address
+## Messages
+Saved=Saved
+UndefinedCallback=Undefined
+BadFile=Bad file
+UnexpectedError=Unexpected error
+Instructions1=To allow Dolibarr to communicate with Google, you need to register in the <a href="https://console.developers.google.com" target="_blank">Google Developers Console</a>.<br>Log in with your Google Account.<br>Create a new project.<br>Pick a project name (i.e. Dolibarr).<br>Any project ID will do.<br>Create the project.<br>Use "Enable an API" from the dashboard or the "API & AUTH", "APIs" menu.<br>Enable the APIs needed for your modules:
+Instructions2=Go to "Credentials".<br>Create a new Oauth Client ID with the following parameters:<ul><li>APPLICATION TYPE: Web application</li><li>AUTHORIZED JAVASCRIPT ORIGINS: copy/paste the Javascript origin below</li><li>AUTHORIZED REDIRECT URI: copy/paste the Redirect URL below</li></ul>
+Instructions3=Download JSON <b>from the newly created "Client ID for web application"</b> and upload it using the form below.
+Instructions4=Congratulations, you just allowed Dolibarr to communicate with Google.
+Instructions5=If you access Dolibarr from your root domain, for example, "www.mydomain.com", you should set the address / . If Dolibarr was intalled in a subfolder, for example, "www.mydomain.com/myfolder/", the source address should be: myfolder. Save and reload the page to see the redirect URL bellow.
+Instructions6=Enter the allowed comma-separated email domains or domains, without using the "@" symbol, for example, mydomain.com, anotherdomain.org
+RefreshPage=If the redirect URL does not appear, is because you need to enter the origin call address, save and reload the page with F5.
+# About
+Version=Version:
+Publisher=Publisher
+License=License
+Credits=Credits:
+Development=Development:
+ProjectManager=Project manager
+SoftwareEngineer=Software engineer
+Libraries=Libraries:
+Contains=Contains:
+Ressources=Resources:
+## Messages
+InvalidConfiguration=Your configuration is invalid<br>Please contact your system administrator
+OperationSuccessful=Operation successful
+OperationFailed=Operation failed
+# Login tpl
+AccessDenied=Access denied: Only accounts of
+AccessDenied2=with active users in this system are allowed.
+# ZeroClipBoard
+CopyToClipboard=Copy to clipboard
+CopiedToClipboard=Copied to clipboard
+# ---
+AllowRegister=Allow?
+AllowTheRegister=Allow automatic registration of new users
+InsertsNotAllowed=Automatic user registration is not allowed
+InsertError=An error occurred while storing your data. Please try again.
