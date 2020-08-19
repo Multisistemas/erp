@@ -1,7 +1,7 @@
 -- VENTAS CONTRIBUYENTES
-SET @begin := '2019-12-01';
-SET @end := '2019-12-31';
-SELECT '#' corr,
+SET @begin := '2020-07-01';
+SET @end := '2020-07-31';
+SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
 	   DATE_FORMAT(f.datec, "%d/%m/%Y") fecha_emision, 
        TRIM(LEADING '0' FROM TRIM(LEADING 'CCF' FROM f.ref_client)) corr_pre_impreso, 
        s.nom nombre_contribuyente, 
@@ -16,7 +16,8 @@ SELECT '#' corr,
        round(IFNULL(sum(f.total_ttc),0),2) ventas_totales
   FROM `llx_facture` f,
        `llx_facture_extrafields` fe,
-       `llx_societe` s
+       `llx_societe` s,
+       (SELECT @rownum := 0) r
  WHERE f.rowid = fe.fk_object
    AND f.fk_soc = s.rowid
    AND f.ref_client LIKE 'CCF%'
