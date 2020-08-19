@@ -51,11 +51,12 @@ GROUP BY 1,2,3,4
 ORDER BY 1,2,3,4;
 
 -- VENTAS CONSUMIDOR
-SET @begin := '2019-12-01';
-SET @end := '2019-12-31';
+SET @begin := '2020-07-01';
+SET @end := '2020-07-31';
 SELECT DATE_FORMAT(f.datec, "%d/%m/%Y") fecha_emision, 
        MIN(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) del, 
        MAX(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) al,
+       '' caja_num,
        round(sum(CASE WHEN (fe.exenta = 1) THEN f.total ELSE 0 END),2) ventas_externas,
        round(sum(CASE WHEN (fe.exenta = 1) AND (f.ref_client LIKE 'FAC%') THEN 0 ELSE f.total END),2) ventas_internas_gravadas,
        round(sum(CASE WHEN (fe.exenta = 0) AND (f.ref_client LIKE 'FEX%') THEN f.total ELSE 0 END),2) exportaciones,
