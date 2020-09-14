@@ -51,9 +51,9 @@ GROUP BY 1,2,3,4
 ORDER BY 1,2,3,4;
 
 -- VENTAS CONSUMIDOR
-SET @begin := '2020-07-01';
-SET @end := '2020-07-31';
-SELECT DATE_FORMAT(f.datec, "%d/%m/%Y") fecha_emision, 
+SET @begin := '2020-08-01';
+SET @end := '2020-08-31';
+SELECT DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        MIN(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) del, 
        MAX(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) al,
        '' caja_num,
@@ -65,6 +65,6 @@ SELECT DATE_FORMAT(f.datec, "%d/%m/%Y") fecha_emision,
        `llx_facture_extrafields` fe
  WHERE f.rowid = fe.fk_object
    AND f.ref_client LIKE 'F%'
-   AND f.datec BETWEEN @begin AND @end
+   AND f.datef BETWEEN @begin AND @end
 GROUP BY 1
 ORDER BY 1;
