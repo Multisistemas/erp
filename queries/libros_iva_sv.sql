@@ -27,10 +27,10 @@ ORDER BY 1,2,3,4;
 
 
 -- COMPRAS (SOLO CCF)
-SET @begin := '2019-12-01';
-SET @end := '2019-12-31';
+SET @begin := '2020-08-01';
+SET @end := '2020-08-31';
 SELECT '#' corr,
-	   DATE_FORMAT(f.datec, "%d/%m/%Y") fecha_emision, 
+	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        f.ref_supplier num_documento, 
        s.idprof5 DUI,
        s.siret NCR, 
@@ -46,7 +46,7 @@ SELECT '#' corr,
        `llx_societe` s
  WHERE f.fk_soc = s.rowid
    AND f.ref_supplier LIKE 'CCF%'
-   AND f.datec BETWEEN @begin AND @end
+   AND f.datef BETWEEN @begin AND @end
 GROUP BY 1,2,3,4
 ORDER BY 1,2,3,4;
 
