@@ -1,8 +1,8 @@
 -- VENTAS CONTRIBUYENTES
-SET @begin := '2020-07-01';
-SET @end := '2020-07-31';
+SET @begin := '2020-09-01';
+SET @end := '2020-09-30';
 SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
-	   DATE_FORMAT(f.datec, "%d/%m/%Y") fecha_emision, 
+	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        TRIM(LEADING '0' FROM TRIM(LEADING 'CCF' FROM f.ref_client)) corr_pre_impreso, 
        s.nom nombre_contribuyente, 
        s.siret num_registro, 
@@ -21,7 +21,7 @@ SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
  WHERE f.rowid = fe.fk_object
    AND f.fk_soc = s.rowid
    AND f.ref_client LIKE 'CCF%'
-   AND f.datec BETWEEN @begin AND @end
+   AND f.datef BETWEEN @begin AND @end
 GROUP BY 1,2,3,4
 ORDER BY 1,2,3,4;
 
