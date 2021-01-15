@@ -1,4 +1,47 @@
--- VENTAS CONTRIBUYENTES
+-- COMPRAS (SOLO CCF)
+SET @begin := '2020-08-01';
+SET @end := '2020-08-31';
+SELECT '#' corr,
+	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
+       f.ref_supplier num_documento, 
+       s.idprof5 DUI,
+       s.siret NCR, 
+       s.nom nombre_proveedor, 
+       round(sum(0),2) exentas_internas,
+       round(sum(0),2) exentas_importaciones,
+       round(sum(f.total_ht),2) compras_internas,
+       round(sum(0),2) compras_importaciones,
+       round(sum(f.total_tva),2) credito_fiscal,
+       round(IFNULL(sum(f.total_ttc),0),2) total_compras -- ,
+--       round(IFNULL(sum(fe.vat_invoice_retention),0),2) impuesto_retenido     
+  FROM `llx_facture_fourn` f,
+       `llx_societe` s
+ WHERE f.fk_soc = s.rowid
+   AND f.ref_supplier LIKE 'CCF%'
+   AND f.datef BETWEEN @begin AND @end
+GROUP BY 1,2,3,4
+ORDER BY 1,2,3,4;
+
+-- VENTAS FAC (CONSUMIDOR FINAL)
+SET @begin := '2020-08-01';
+SET @end := '2020-08-31';
+SELECT DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
+       MIN(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) del, 
+       MAX(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) al,
+       '' caja_num,
+       round(sum(CASE WHEN (fe.exenta = 1) THEN f.total ELSE 0 END),2) ventas_externas,
+       round(sum(CASE WHEN (fe.exenta = 1) AND (f.ref_client LIKE 'FAC%') THEN 0 ELSE f.total END),2) ventas_internas_gravadas,
+       round(sum(CASE WHEN (fe.exenta = 0) AND (f.ref_client LIKE 'FEX%') THEN f.total ELSE 0 END),2) exportaciones,
+       round(IFNULL(sum(f.total_ttc),0),2) total_ventas_diarias
+  FROM `llx_facture` f,
+       `llx_facture_extrafields` fe
+ WHERE f.rowid = fe.fk_object
+   AND f.ref_client LIKE 'F%'
+   AND f.datef BETWEEN @begin AND @end
+GROUP BY 1
+ORDER BY 1;
+
+-- VENTAS CCF (CREDITO FISCAL)
 SET @begin := '2020-09-01';
 SET @end := '2020-09-30';
 SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
@@ -25,46 +68,3 @@ SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
 GROUP BY 1,2,3,4
 ORDER BY 1,2,3,4;
 
-
--- COMPRAS (SOLO CCF)
-SET @begin := '2020-08-01';
-SET @end := '2020-08-31';
-SELECT '#' corr,
-	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
-       f.ref_supplier num_documento, 
-       s.idprof5 DUI,
-       s.siret NCR, 
-       s.nom nombre_proveedor, 
-       round(sum(0),2) exentas_internas,
-       round(sum(0),2) exentas_importaciones,
-       round(sum(f.total_ht),2) compras_internas,
-       round(sum(0),2) compras_importaciones,
-       round(sum(f.total_tva),2) credito_fiscal,
-       round(IFNULL(sum(f.total_ttc),0),2) total_compras -- ,
---       round(IFNULL(sum(fe.vat_invoice_retention),0),2) impuesto_retenido     
-  FROM `llx_facture_fourn` f,
-       `llx_societe` s
- WHERE f.fk_soc = s.rowid
-   AND f.ref_supplier LIKE 'CCF%'
-   AND f.datef BETWEEN @begin AND @end
-GROUP BY 1,2,3,4
-ORDER BY 1,2,3,4;
-
--- VENTAS CONSUMIDOR
-SET @begin := '2020-08-01';
-SET @end := '2020-08-31';
-SELECT DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
-       MIN(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) del, 
-       MAX(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) al,
-       '' caja_num,
-       round(sum(CASE WHEN (fe.exenta = 1) THEN f.total ELSE 0 END),2) ventas_externas,
-       round(sum(CASE WHEN (fe.exenta = 1) AND (f.ref_client LIKE 'FAC%') THEN 0 ELSE f.total END),2) ventas_internas_gravadas,
-       round(sum(CASE WHEN (fe.exenta = 0) AND (f.ref_client LIKE 'FEX%') THEN f.total ELSE 0 END),2) exportaciones,
-       round(IFNULL(sum(f.total_ttc),0),2) total_ventas_diarias
-  FROM `llx_facture` f,
-       `llx_facture_extrafields` fe
- WHERE f.rowid = fe.fk_object
-   AND f.ref_client LIKE 'F%'
-   AND f.datef BETWEEN @begin AND @end
-GROUP BY 1
-ORDER BY 1;
