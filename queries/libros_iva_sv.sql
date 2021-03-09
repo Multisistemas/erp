@@ -1,6 +1,6 @@
 -- COMPRAS (SOLO CCF)
-SET @begin := '2020-08-01';
-SET @end := '2020-08-31';
+SET @begin := '2021-02-01';
+SET @end := '2021-02-28';
 SELECT '#' corr,
 	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        f.ref_supplier num_documento, 
@@ -19,12 +19,12 @@ SELECT '#' corr,
  WHERE f.fk_soc = s.rowid
    AND f.ref_supplier LIKE 'CCF%'
    AND f.datef BETWEEN @begin AND @end
-GROUP BY 1,2,3,4
-ORDER BY 1,2,3,4;
+GROUP BY 1,2,3,4,5,6
+ORDER BY 1,2,3,4,5,6;
 
 -- VENTAS FAC (CONSUMIDOR FINAL)
-SET @begin := '2020-08-01';
-SET @end := '2020-08-31';
+SET @begin := '2021-02-01';
+SET @end := '2021-02-28';
 SELECT DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        MIN(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) del, 
        MAX(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) al,
