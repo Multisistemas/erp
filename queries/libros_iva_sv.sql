@@ -42,8 +42,8 @@ GROUP BY 1,4
 ORDER BY 1,4;
 
 -- VENTAS CCF (CREDITO FISCAL)
-SET @begin := '2020-09-01';
-SET @end := '2020-09-30';
+SET @begin := '2021-04-01';
+SET @end := '2021-04-30';
 SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
 	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        TRIM(LEADING '0' FROM TRIM(LEADING 'CCF' FROM f.ref_client)) corr_pre_impreso, 
@@ -65,6 +65,6 @@ SELECT @rownum:=@rownum+1 corr, -- TODO: fix this iterator!!!
    AND f.fk_soc = s.rowid
    AND f.ref_client LIKE 'CCF%'
    AND f.datef BETWEEN @begin AND @end
-GROUP BY 1,2,3,4
-ORDER BY 1,2,3,4;
+GROUP BY 1,2,3,4,5
+ORDER BY 1,2,3,4,5;
 
