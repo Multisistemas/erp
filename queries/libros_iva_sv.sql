@@ -23,23 +23,23 @@ GROUP BY 1,2,3,4,5,6
 ORDER BY 1,2,3,4,5,6;
 
 -- VENTAS FAC (CONSUMIDOR FINAL)
-SET @begin := '2021-02-01';
-SET @end := '2021-02-28';
+SET @begin := '2021-04-01';
+SET @end := '2021-04-30';
 SELECT DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        MIN(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) del, 
        MAX(TRIM(LEADING '0' FROM TRIM(LEADING 'FEX' FROM TRIM(LEADING 'FAC' FROM f.ref_client)))) al,
        '' caja_num,
        round(sum(CASE WHEN (fe.exenta = 1) THEN f.total ELSE 0 END),2) ventas_externas,
-       round(sum(CASE WHEN (fe.exenta = 1) AND (f.ref_client LIKE 'FAC%') THEN 0 ELSE f.total END),2) ventas_internas_gravadas,
-       round(sum(CASE WHEN (fe.exenta = 0) AND (f.ref_client LIKE 'FEX%') THEN f.total ELSE 0 END),2) exportaciones,
+       round(sum(CASE WHEN ((fe.exenta = 0 OR fe.exenta IS NULL) AND (f.ref_client LIKE 'FAC%')) THEN f.total ELSE 0 END),2) ventas_internas_gravadas,
+       round(sum(CASE WHEN (fe.exenta = 0 OR fe.exenta IS NULL) AND (f.ref_client LIKE 'FEX%') THEN f.total ELSE 0 END),2) exportaciones,
        round(IFNULL(sum(f.total_ttc),0),2) total_ventas_diarias
   FROM `llx_facture` f,
        `llx_facture_extrafields` fe
  WHERE f.rowid = fe.fk_object
    AND f.ref_client LIKE 'F%'
    AND f.datef BETWEEN @begin AND @end
-GROUP BY 1
-ORDER BY 1;
+GROUP BY 1,4
+ORDER BY 1,4;
 
 -- VENTAS CCF (CREDITO FISCAL)
 SET @begin := '2020-09-01';
