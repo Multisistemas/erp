@@ -1,22 +1,28 @@
 -- COMPRAS (SOLO CCF)
-SET @begin := '2021-02-01';
-SET @end := '2021-02-28';
+SET @begin := '2021-09-01';
+SET @end := '2021-09-30';
 SELECT '#' corr,
 	   DATE_FORMAT(f.datef, "%d/%m/%Y") fecha_emision, 
        f.ref_supplier num_documento, 
        s.idprof5 DUI,
        s.siret NCR, 
        s.nom nombre_proveedor, 
-       round(sum(0),2) exentas_internas,
+       (select coalesce(round(sum(fd1.total_ht),2),0) 
+          from llx_facture_fourn_det fd1
+         where f.rowid = fd1.fk_facture_fourn
+           and fd1.tva_tx = 0) exentas_internas,
        round(sum(0),2) exentas_importaciones,
-       round(sum(f.total_ht),2) compras_internas,
+       (select coalesce(round(sum(fd2.total_ht),2),0) 
+          from llx_facture_fourn_det fd2
+         where f.rowid = fd2.fk_facture_fourn
+           and fd2.tva_tx > 0) compras_internas,
        round(sum(0),2) compras_importaciones,
        round(sum(f.total_tva),2) credito_fiscal,
        round(IFNULL(sum(f.total_ttc),0),2) total_compras -- ,
 --       round(IFNULL(sum(fe.vat_invoice_retention),0),2) impuesto_retenido     
-  FROM `llx_facture_fourn` f,
+  FROM `llx_facture_fourn` f, 
        `llx_societe` s
- WHERE f.fk_soc = s.rowid
+ WHERE f.fk_soc = s.rowid 
    AND f.ref_supplier LIKE 'CCF%'
    AND f.datef BETWEEN @begin AND @end
 GROUP BY 1,2,3,4,5,6
